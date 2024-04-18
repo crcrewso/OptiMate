@@ -84,6 +84,23 @@ namespace OptiMate.ViewModels
             }
         }
 
+        public bool clearFirst
+        {
+            get
+            {
+                return _generatedStructure.ClearFirst;
+            }
+            set
+            {
+                if (value != _generatedStructure.ClearFirst)
+                {
+                    _generatedStructure.ClearFirst = value;
+                    isModified = true;
+                    RaisePropertyChangedEvent(nameof(WarningVisibility_GenStructureChanged));
+                }
+            }
+        }
+
         public bool isTemporary 
         {
             get
@@ -132,6 +149,25 @@ namespace OptiMate.ViewModels
                     return new SolidColorBrush(Colors.Orange);
             }
         }
+
+        
+        public Color StructureColor
+        {
+            get
+            {
+                return _model.GetGeneratedStructureColor(_generatedStructure.StructureId);
+            }
+            set
+            {
+                if (value != _model.GetGeneratedStructureColor(_generatedStructure.StructureId))
+                {
+                    _model.SetGeneratedStructureColor(_generatedStructure.StructureId, value);
+                    isModified = true;
+                    RaisePropertyChangedEvent(nameof(StructureColor));
+                }
+            }
+        }
+        
 
         public bool ConfirmRemoveStructurePopupVisibility { get; set; }
 

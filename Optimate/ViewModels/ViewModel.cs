@@ -71,6 +71,7 @@ namespace OptiMate.ViewModels
         public string CurrentStructureSet { get; set; }
 
         public bool CanLoadTemplates { get; set; } = true;
+        public bool CanSaveTemplates { get; private set; } = true;
         public bool PopupLock { get; private set; } = true;
 
         private List<string> _warnings = new List<string>();
@@ -531,6 +532,7 @@ namespace OptiMate.ViewModels
         {
             ActiveTemplate = null;
             warnings.Clear();
+            RaisePropertyChangedEvent(nameof(HasWarnings));
             Working = true;
             ScriptDone = false;
             TemplatePointers.Clear();

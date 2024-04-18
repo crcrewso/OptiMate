@@ -16,6 +16,7 @@ using VMS.TPS.Common.Model.API;
 using OptiMate.Logging;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
+using System.Windows.Media;
 
 namespace OptiMate.Models
 {
@@ -134,12 +135,43 @@ namespace OptiMate.Models
                 completionWarnings.AddRange(structureModel.GetCompletionWarnings());
                 _ea.GetEvent<StructureGeneratedEvent>().Publish(new StructureGeneratedEventInfo { Structure = genStructure, IndexInQueue = index++, TotalToGenerate = _template.GeneratedStructures.Count() });
             }
-            foreach (var tempStructure in _template.GeneratedStructures.Where(x=>x.IsTemporary))
+            foreach (var tempStructure in _template.GeneratedStructures.Where(x => x.IsTemporary))
             {
                 _ea.GetEvent<GeneratedStructureCleaningUpEvent>().Publish(tempStructure.StructureId);
                 await RemoveTemporaryGenStructure(tempStructure.StructureId);
             }
             return completionWarnings;
+        }
+
+        internal System.Windows.Media.Color GetGeneratedStructureColor(string structureId)
+        {
+            var genStructure = _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == structureId);
+            if (genStructure != null)
+            {
+                var genStructureModel = new GenerateStructureModel(_ew, _ea, genStructure, GetAugmentedTemplateStructures(genStructure.StructureId));
+                return genStructureModel.GetStructureColor();
+            }
+            else
+                return Colors.Magenta;
+
+
+        }
+
+        internal bool isDoseLevelValid(ushort? value)
+        {
+            if (value == null || value < 0 || value > 50000)
+                return false;
+            else
+                return true;
+        }
+
+        internal void SetGeneratedStructureColor(string structureId, System.Windows.Media.Color value)
+        {
+            var genStructure = _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == structureId);
+            if (genStructure != null)
+            {
+                genStructure.StructureColor = $"{value.R:000},{value.G:000},{value.B:000}";
+            }
         }
 
         private async Task RemoveTemporaryGenStructure(string structureId)
@@ -158,7 +190,7 @@ namespace OptiMate.Models
             {
                 SeriLogModel.AddError($"Error deleting temporary structure {structureId} from template {_template.TemplateDisplayName}", ex);
             }
-           
+
         }
 
         private List<TemplateStructure> GetAugmentedTemplateStructures(string structureId)
@@ -238,47 +270,48 @@ namespace OptiMate.Models
                     valid = false;
                     ValidationErrors.Add($"{genStructure.StructureId} is not a valid Eclipse struct");
                 }
-                foreach (var instruction in genStructure.Instructions.Items)
-                {
-                    switch (instruction)
-                    {
-                        case Or inst:
-                            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
-                            {
-                                valid = false;
-                                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
-                            }
-                            break;
-                        case And inst:
-                            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
-                            {
-                                valid = false;
-                                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
-                            }
-                            break;
-                        case Sub inst:
-                            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
-                            {
-                                valid = false;
-                                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
-                            }
-                            break;
-                        case Crop inst:
-                            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
-                            {
-                                valid = false;
-                                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
-                            }
-                            break;
-                        case SubFrom inst:
-                            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
-                            {
-                                valid = false;
-                                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
-                            }
-                            break;
-                    }
-                }
+                // Disabling this validation as it prevents users from loading a template that they may have saved incompletely.
+                //foreach (var instruction in genStructure.Instructions.Items)
+                //{
+                //    switch (instruction)
+                //    {
+                //        case Or inst:
+                //            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
+                //            {
+                //                valid = false;
+                //                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
+                //            }
+                //            break;
+                //        case And inst:
+                //            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
+                //            {
+                //                valid = false;
+                //                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
+                //            }
+                //            break;
+                //        case Sub inst:
+                //            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
+                //            {
+                //                valid = false;
+                //                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
+                //            }
+                //            break;
+                //        case Crop inst:
+                //            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
+                //            {
+                //                valid = false;
+                //                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
+                //            }
+                //            break;
+                //        case SubFrom inst:
+                //            if (!IsValidReferenceStructure(genStructure.StructureId, inst.TemplateStructureId))
+                //            {
+                //                valid = false;
+                //                ValidationErrors.Add($"Generated structure {genStructure.StructureId} references a Template Structure that could not be found: {inst.TemplateStructureId}");
+                //            }
+                //            break;
+                //    }
+                //}
             }
             if (!AreTemplateStructuresUnique())
             {
@@ -414,7 +447,7 @@ namespace OptiMate.Models
                 switch (firstIntruction)
                 {
                     case Or or:
-                        if (GetAugmentedTemplateStructures(genStructure.StructureId).Select(x=>x.TemplateStructureId).Contains(or.TemplateStructureId))
+                        if (GetAugmentedTemplateStructures(genStructure.StructureId).Select(x => x.TemplateStructureId).Contains(or.TemplateStructureId))
                             return false;
                         else
                             return true;
@@ -680,6 +713,39 @@ namespace OptiMate.Models
         private bool writeTemplate(string newTemplateId, string fileName)
         {
             var originalTemplateName = _template.TemplateDisplayName;
+            try
+            {
+                //Prep the template for saving, mostly filling in null strings with empty strings
+                foreach (var gs in _template.GeneratedStructures)
+                {
+                    if (gs.Instructions != null)
+                        foreach (var inst in gs.Instructions.Items)
+                            switch (inst)
+                            {
+                                case Or or:
+                                    or.TemplateStructureId = or.TemplateStructureId ?? "";
+                                    break;
+                                case And and:
+                                    and.TemplateStructureId = and.TemplateStructureId ?? "";
+                                    break;
+                                case Sub sub:
+                                    sub.TemplateStructureId = sub.TemplateStructureId ?? "";
+                                    break;
+                                case SubFrom subFrom:
+                                    subFrom.TemplateStructureId = subFrom.TemplateStructureId ?? "";
+                                    break;
+                                case Crop crop:
+                                    crop.TemplateStructureId = crop.TemplateStructureId ?? "";
+                                    break;
+                            }
+                }
+            }
+            catch (Exception ex)
+            {
+                _template.TemplateDisplayName = originalTemplateName;
+                SeriLogModel.AddError("Failed to save user's template during preparation for saving", ex);
+                return false;
+            }
             try
             {
                 XmlSerializer ser = new XmlSerializer(typeof(OptiMateTemplate));

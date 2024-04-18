@@ -642,12 +642,15 @@ namespace OptiMate {
         
         private bool isTemporaryField;
         
+        private bool clearFirstField;
+        
         private string dicomTypeField;
         
         private string structureColorField;
         
         public GeneratedStructure() {
             this.isTemporaryField = false;
+            this.clearFirstField = true;
             this.dicomTypeField = "CONTROL";
         }
         
@@ -681,6 +684,18 @@ namespace OptiMate {
             }
             set {
                 this.isTemporaryField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool ClearFirst {
+            get {
+                return this.clearFirstField;
+            }
+            set {
+                this.clearFirstField = value;
             }
         }
         

@@ -10,6 +10,7 @@
         xmlns:viewModels="clr-namespace:OptiMate.ViewModels"
         xmlns:controls="clr-namespace:OptiMate.Controls"
         xmlns:converters="clr-namespace:OptiMate.Converters"
+        xmlns:extended="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:dd="urn:gong-wpf-dragdrop"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
@@ -94,7 +95,7 @@
                             <controls:SaveAsTemplateControl MinHeight="35" Height="Auto" Width ="500" DataContext="{Binding SaveTemplateVM, UpdateSourceTrigger=PropertyChanged}"/>
                         </Popup>
                         <Button Grid.Column="4" Margin="10,0,0,0" HorizontalAlignment="Right" Style="{StaticResource ButtonStyle_Medium}" ToolTip="Save current template, including modifications, as a personal template. This does not alter the public template."
-                                Command="{Binding SaveAsPersonalCommand}" Width="Auto" IsEnabled="{Binding CanSaveTemplates, UpdateSourceTrigger=PropertyChanged}" Name="SaveButton">
+                                Command="{Binding SaveAsPersonalCommand}" Width="Auto" Visibility="{Binding CanSaveTemplates, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" Name="SaveButton">
                             <TextBlock Text="Save as personal" FontSize="14" FontWeight="DemiBold" Margin="5,0,5,0"/>
                         </Button>
                         <Border Grid.Column="5" CornerRadius="5,5,5,5" Background="PapayaWhip" Height="30" HorizontalAlignment="Right" Margin="10,0,20,0" ToolTip="View personal templates.">
@@ -146,7 +147,7 @@
                         <Grid Grid.Row="2" Grid.ColumnSpan="2" >
                             <Border HorizontalAlignment="Stretch" Background="Gainsboro"
                                     VerticalAlignment="Stretch" Visibility="{Binding HasTemplateStructuresWarning, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
-                                <TextBlock Text="Template does not use existing structures" FontSize="14" FontStyle="Italic" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent"/>
+                                <TextBlock Text="Template does not map existing structures. Add a mapping using the '+' button above." FontSize="14" FontStyle="Italic" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent"/>
                             </Border>
                             <ScrollViewer Margin="0,5,0,5" Focusable="true" VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
                                           Template="{DynamicResource ScrollViewerControlTemplate1}" CanContentScroll="True" Background="Transparent" Visibility="{Binding HasTemplateStructures, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
@@ -262,7 +263,7 @@
                         </Grid>
                         <Border Grid.Row="1" HorizontalAlignment="Stretch" Background="Gainsboro"
                                 VerticalAlignment="Stretch" Visibility="{Binding HasGeneratedStructuresWarning, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
-                            <TextBlock Text="Template does not generate any structures. Add them using the '+' button above" FontSize="14" FontStyle="Italic" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent"/>
+                            <TextBlock Text="Template does not generate any structures. Add them using the '+' button above." FontSize="14" FontStyle="Italic" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent"/>
                         </Border>
                         <Grid Grid.Row="1" Visibility="{Binding HasGeneratedStructures, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
                             <ScrollViewer Margin="0,0,0,0" Focusable="true" VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
@@ -307,6 +308,8 @@
                                                         <Grid>
                                                             <Grid.RowDefinitions>
                                                                 <RowDefinition Height="*"/>
+                                                                <RowDefinition Height="Auto"/>
+                                                                <RowDefinition Height="Auto"/>
                                                                 <RowDefinition Height="*"/>
                                                             </Grid.RowDefinitions>
                                                             <StackPanel Grid.Row="0" Orientation="Horizontal"  VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5,0,0,0">
@@ -316,8 +319,17 @@
                                                                     Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}}" Background="{Binding StructureIdColor, UpdateSourceTrigger=PropertyChanged,FallbackValue=Orange}" Style="{StaticResource TextBoxStyle2}"/>
                                                             </StackPanel>
                                                             <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,10,0,0" Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}, FallbackValue=Visible}">
-                                                                <TextBlock Text="Temporary Structure: " FontSize="10"/>
-                                                                <CheckBox Style="{StaticResource CheckBoxStyle1}" IsChecked="{Binding isTemporary, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                <TextBlock Text="Clear first: " FontSize="12" VerticalAlignment="Center" ToolTip="If checked, any existing contours for this structure will be cleared before generation."/>
+                                                                <CheckBox Style="{StaticResource CheckBoxStyle1}" IsChecked="{Binding clearFirst, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,10,0,0" Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}, FallbackValue=Visible}">
+                                                                <TextBlock Text="Temporary Structure: " FontSize="12" VerticalAlignment="Center" ToolTip="Temporary structures are removed after all structures have been generated."/>
+                                                                <CheckBox Style="{StaticResource CheckBoxStyle1}" IsChecked="{Binding isTemporary, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,10,0,0" Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}, FallbackValue=Visible}">
+                                                                <TextBlock Text="Select Color: " FontSize="12" VerticalAlignment="Center"/>
+                                                                <extended:ColorPicker Name="ColorPicker" DropDownBackground="White" HeaderBackground="White" Foreground="LightSteelBlue" TabBackground="CornflowerBlue" TabForeground="White" 
+                                                                                      SelectedColor="{Binding StructureColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Width="50" Height="25" Margin="5,0,0,0"/>
                                                             </StackPanel>
                                                         </Grid>
 

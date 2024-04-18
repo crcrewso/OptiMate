@@ -12,22 +12,15 @@ using System.Windows.Interop;
 using System.Drawing;
 using System.Windows.Media.Animation;
 using System.Windows.Documents;
+using System.Windows.Media;
 
 namespace OptiMate.Models
 {
     public partial class MainModel
     {
-        internal bool isDoseLevelValid(ushort? value)
-        {
-            if (value == null || value < 0 || value > 50000)
-                return false;
-            else
-                return true;
-        }
-
         private class GenerateStructureModel
         {
-
+            private System.Windows.Media.Color _defaultColor = Colors.Magenta;
             private EsapiWorker ew;
             public IEventAggregator _ea;
             private GeneratedStructure genStructure;
@@ -77,84 +70,6 @@ namespace OptiMate.Models
                     return Temp;
                 }
             }
-
-            //private async Task<InstructionCompletionStatus> ApplyInstruction(Copy copyInstruction)
-            //{
-            //    InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Pending;
-            //    bool Done = await Task.Run(() => ew.AsyncRunStructureContext((p, S, ui) =>
-            //    {
-            //        try
-            //        {
-            //            string StructureToCopyId = templateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, copyInstruction.TemplateStructureId, StringComparison.OrdinalIgnoreCase))?.EclipseStructureId;
-            //            if (string.IsNullOrEmpty(StructureToCopyId))
-            //            {
-            //                string warningMessage = string.Format($"Copy target for structure {genStructure.StructureId} is null, skipping structure...");
-            //                _warnings.Add(warningMessage);
-            //                SeriLogModel.AddLog(warningMessage);
-            //                completionStatus = InstructionCompletionStatus.Failed;
-            //                return;
-            //            }
-            //            Structure BaseStructure = S.Structures.FirstOrDefault(x => string.Equals(x.Id, StructureToCopyId, StringComparison.OrdinalIgnoreCase));
-            //            if (BaseStructure == null)
-            //            {
-            //                string warningMessage = string.Format($"Attempt to create structure {genStructure.StructureId} failed as copy target {StructureToCopyId} does not exist in structure set, skipping structure...");
-            //                _warnings.Add(warningMessage);
-            //                SeriLogModel.AddLog(warningMessage);
-            //                completionStatus = InstructionCompletionStatus.Failed;
-            //                return;
-            //            }
-            //            else if (BaseStructure.IsEmpty)
-            //            {
-            //                string warningMessage = string.Format($"Attempt to create structure {genStructure.StructureId} failed as copy target {StructureToCopyId} is empty, skipping structure...");
-            //                _warnings.Add(warningMessage);
-            //                SeriLogModel.AddLog(warningMessage);
-            //                completionStatus = InstructionCompletionStatus.Failed;
-            //                return;
-            //            }
-            //            else
-            //            {
-            //                if (string.Equals(StructureToCopyId, generatedEclipseStructure.Id, StringComparison.OrdinalIgnoreCase)) // if OS is the same as the copy structure, then only need to check for high res conversion
-            //                {
-            //                    if (genStructure.isHighResolution && !generatedEclipseStructure.IsHighResolution)
-            //                    {
-            //                        generatedEclipseStructure.ConvertToHighResolution();
-            //                    }
-            //                    return;
-            //                }
-            //                if (!generatedEclipseStructure.IsEmpty)
-            //                {
-            //                    generatedEclipseStructure.SegmentVolume = generatedEclipseStructure.SegmentVolume.And(generatedEclipseStructure.SegmentVolume.Not()); // clear structure;
-            //                }
-            //                if (BaseStructure.IsHighResolution && !generatedEclipseStructure.IsHighResolution)
-            //                {
-            //                    generatedEclipseStructure.ConvertToHighResolution();
-            //                    generatedEclipseStructure.SegmentVolume = BaseStructure.SegmentVolume;
-            //                }
-            //                else if (!BaseStructure.IsHighResolution && generatedEclipseStructure.IsHighResolution)
-            //                {
-            //                    var HRTemp = S.Structures.FirstOrDefault(x => x.Id == TempStructureName);
-            //                    if (HRTemp != null)
-            //                        S.RemoveStructure(HRTemp);
-            //                    HRTemp = S.AddStructure(genStructure.DicomType, TempStructureName);
-            //                    HRTemp.SegmentVolume = BaseStructure.SegmentVolume;
-            //                    HRTemp.ConvertToHighResolution();
-            //                    generatedEclipseStructure.SegmentVolume = HRTemp.SegmentVolume;
-            //                    S.RemoveStructure(HRTemp);
-            //                    generatedEclipseStructure.SegmentVolume = BaseStructure.SegmentVolume;
-            //                }
-            //                else
-            //                    generatedEclipseStructure.SegmentVolume = BaseStructure.SegmentVolume;
-            //                SeriLogModel.AddLog($"Copied structure {StructureToCopyId} to {genStructure.StructureId}");
-            //                completionStatus = InstructionCompletionStatus.Completed;
-            //            }
-            //        }
-            //        catch (Exception e)
-            //        {
-            //            SeriLogModel.AddError($"Exception in ApplyInstruction for {genStructure.StructureId}", e);
-            //        }
-            //    }));
-            //    return completionStatus;
-            //}
 
             private async Task<InstructionCompletionStatus> ApplyInstruction(Margin marginInstruction)
             {
@@ -683,10 +598,17 @@ namespace OptiMate.Models
                         }
                         else
                         {
-                            SeriLogModel.AddWarning($"Structure {genStructure.StructureId} already exists, overwriting...");
-                            generatedEclipseStructure = ClearStructure(S, generatedEclipseStructure);
+                            if (genStructure.ClearFirst)
+                            {
+                                SeriLogModel.AddWarning($"Structure {genStructure.StructureId} already exists and clear-first is true, clearing...");
+                                generatedEclipseStructure = ClearStructure(S, generatedEclipseStructure);
+                            }
+                            else
+                            {
+                                SeriLogModel.AddWarning($"Structure {genStructure.StructureId} already exists and clear-first is false, not clearing...");
+                            }
                         }
-                        SetStructureColor(generatedEclipseStructure, genStructure.StructureColor);
+                        SetStructureColor();
 
                     }));
                     InstructionCompletionStatus status = InstructionCompletionStatus.Pending;
@@ -759,23 +681,25 @@ namespace OptiMate.Models
                 }
             }
 
-            private void SetStructureColor(Structure generatedEclipseStructure, string structureColor)
+            public System.Windows.Media.Color GetStructureColor()
+            {
+                return GetColorFromString(genStructure.StructureColor);
+            }
+            public void SetStructureColor()
             {
                 try
                 {
+                    string structureColor = genStructure.StructureColor;
                     if (string.IsNullOrEmpty(structureColor))
                     {
                         SeriLogModel.AddWarning($"No color specified for structure {generatedEclipseStructure.Id}, using default color...");
                         return;
                     }
-                    var colArray = structureColor.Split(',');
-                    if (colArray.Length == 3)
+                    var convertedColor = GetColorFromString(structureColor);
+                    if (convertedColor != null)
                     {
-                        byte r = Convert.ToByte(colArray[0]);
-                        byte g = Convert.ToByte(colArray[1]);
-                        byte b = Convert.ToByte(colArray[2]);
-                        generatedEclipseStructure.Color = System.Windows.Media.Color.FromRgb(r, g, b);
-                        SeriLogModel.AddLog($"Setting color for structure {generatedEclipseStructure.Id} to R:{r},G:{g},B:{b}...");
+                        generatedEclipseStructure.Color = convertedColor;
+                        SeriLogModel.AddLog($"Setting color for structure {generatedEclipseStructure.Id} to {structureColor}...");
                     }
                     else
                     {
@@ -789,6 +713,28 @@ namespace OptiMate.Models
                 }
             }
 
+            private System.Windows.Media.Color GetColorFromString(string colorString)
+            {
+                if (string.IsNullOrEmpty(colorString))
+                {
+                    return _defaultColor;
+                }
+                var colArray = colorString.Split(',');
+                if (colArray.Length == 3)
+                {
+                    byte r = Convert.ToByte(colArray[0]);
+                    byte g = Convert.ToByte(colArray[1]);
+                    byte b = Convert.ToByte(colArray[2]);
+                    var structureColor = System.Windows.Media.Color.FromRgb(r, g, b);
+                    SeriLogModel.AddLog($"Setting color for structure {genStructure.StructureId} to R:{r},G:{g},B:{b}...");
+                    return structureColor;
+                }
+                else
+                {
+                    SeriLogModel.AddLog($"Input color {colorString} is invalid, using default color...");
+                    return _defaultColor;
+                }
+            }
             private async Task ConvertToHighResolution()
             {
                 bool Done = await Task.Run(() => ew.AsyncRunStructureContext((p, S, ui) =>
