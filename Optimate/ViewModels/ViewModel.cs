@@ -103,13 +103,19 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public TemplateViewModel ActiveTemplate { get; set; }
+        private TemplateViewModel _activeTemplate;
+        public TemplateViewModel ActiveTemplate
+        {
+            get { return _activeTemplate; }
+            set
+            {
+                _activeTemplate = value;
+                GC.Collect();  // this seems to solve the problem of InstructionModel objects getting stuck in memory when the template is changed
+                GC.WaitForFullGCComplete();
+            }
+        }
 
         public SaveNewTemplateViewModel SaveTemplateVM { get; set; }
-
-        
-
-
 
         private void ValidateControls(object sender, DataErrorsChangedEventArgs e)
         {
@@ -343,10 +349,10 @@ namespace OptiMate.ViewModels
         private void InitializeProtocol(TemplatePointer value)
         {
             warnings.Clear();
-            var template = _model.LoadTemplate(value);
-            if (template != null)
+            var templateModel = _model.LoadTemplate(value);
+            if (templateModel != null)
             {
-                ActiveTemplate = new TemplateViewModel(template, _model, _ea);
+                ActiveTemplate = new TemplateViewModel(templateModel, _ea);
                 ValidateControls(null, null);
             }
             else
@@ -417,25 +423,16 @@ namespace OptiMate.ViewModels
             if (ScriptDone)
             {
                 ReviewWarningsVM.Id = "Review generated structure warnings";
-                ReviewWarningsVM.Description = HTMLWarningFormatter(warnings);
+                ReviewWarningsVM.Description = Helpers.HTMLWarningFormatter(warnings);
             }
             else
             {
                 ReviewWarningsVM.Id = "Review input validation warnings";
-                ReviewWarningsVM.Description = HTMLWarningFormatter(warnings);
+                ReviewWarningsVM.Description = Helpers.HTMLWarningFormatter(warnings);
             }
         }
 
-        private string HTMLWarningFormatter(List<string> validationWarnings)
-        {
-            string html = "";
-            foreach (var warning in validationWarnings)
-            {
-                html += "&bull; " + warning + "<br>";
-            }
-            return html;
-        }
-
+     
         public ICommand OpenTemplateFolderCommand
         {
             get
@@ -487,7 +484,7 @@ namespace OptiMate.ViewModels
             _warnings.Clear();
             try
             {
-                (warnings) = await _model.GenerateStructures();
+                (warnings) = await ActiveTemplate?.GenerateStructures();
                 if (HasWarnings)
                 {
                     StatusMessage = "Structures generated with warnings, click for details";

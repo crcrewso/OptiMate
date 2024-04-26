@@ -12,13 +12,13 @@ namespace OptiMate.ViewModels
 {
     public class EclipseStructureViewModel : ObservableObject
     {
-        private MainModel _model;
         public string EclipseId { get; set; }
         public SolidColorBrush EclipseIdColor { get; private set; }
+        private bool isEmpty;
 
-        public EclipseStructureViewModel(string eclipseId, MainModel model)
+        public EclipseStructureViewModel(string eclipseId, bool isEmpty)
         {
-            _model = model;
+            this.isEmpty = isEmpty;
             EclipseId = eclipseId;
             UpdateEclipseStructureColors();
         }
@@ -27,7 +27,7 @@ namespace OptiMate.ViewModels
 
         private void UpdateEclipseStructureColors()
         {
-            if (_model.IsEmpty(EclipseId))
+            if (isEmpty)
                 EclipseIdColor = new SolidColorBrush(Colors.DarkGray);
             else
                 EclipseIdColor = new SolidColorBrush(Colors.Black);

@@ -18,42 +18,76 @@ using System.Windows;
 namespace OptiMate.ViewModels
 {
 
+
+    public class GeneratedStructureModelTest : IGeneratedStructureModel
+    {
+        public string StructureId { get; set; }
+        public bool ClearFirst { get; set; }
+        public bool IsTemporary { get; set; }
+        public Color StructureColor { get; set; }
+
+        public bool isStructureIdValid => throw new NotImplementedException();
+
+        public bool OverwriteColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public InstructionModel AddInstruction(OperatorTypes op, int index) { return null; }
+        public InstructionModel ReplaceInstruction(Instruction inst, OperatorTypes op) { return null; }
+        public void RemoveInstruction(Instruction instruction) { }
+
+        public int GetInstructionNumber(InstructionModel instruction) { return 0; }
+        public List<IInstructionModel> GetInstructions()
+        {
+            return new List<IInstructionModel>();
+        }
+
+        public Color GetStructureColor()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetInstructionNumber(IInstructionModel instruction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public InstructionModel ReplaceInstruction(IInstructionModel instruction, OperatorTypes selectedOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool GenStructureWillBeEmpty()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class GeneratedStructureViewModel : ObservableObject
     {
-        private GeneratedStructure _generatedStructure;
-        private MainModel _model;
+        private IGeneratedStructureModel _generatedStructureModel;
         private IEventAggregator _ea;
-        public GeneratedStructureViewModel(GeneratedStructure genStructure, MainModel model, IEventAggregator ea, bool isNew = false)
+        private List<StructureMappingModel> _mappings;
+        public GeneratedStructureViewModel(GeneratedStructureModel genStructureModel, IEventAggregator ea, bool isNew = false)
         {
-            _generatedStructure = genStructure;
+            _generatedStructureModel = genStructureModel;
             EditMode = isNew;
-            _model = model;
+            //_model = model;
             _ea = ea;
-            foreach (var instruction in genStructure.Instructions.Items)
+            foreach (var instructionModel in _generatedStructureModel.GetInstructions())
             {
-                InstructionViewModels.Add(new InstructionViewModel(instruction, genStructure, _model, _ea));
+                InstructionViewModels.Add(new InstructionViewModel(instructionModel, _generatedStructureModel, _ea));
             }
             RegisterEvents();
         }
 
-        private void RegisterEvents()
-        {
-           _ea.GetEvent<RemovingInstructionViewModelEvent>().Subscribe(OnRemovingInstructionViewModel);
-        }
-
-        private void OnRemovingInstructionViewModel(InstructionViewModel ivm)
-        {
-            if (InstructionViewModels.Contains(ivm))
-            {
-                InstructionViewModels.Remove(ivm);
-                RaisePropertyChangedEvent(nameof(InstructionViewModels));
-                _ea.GetEvent<DataValidationRequiredEvent>().Publish();
-            }
-        }
-
         public GeneratedStructureViewModel()
         {
-            _generatedStructure = new GeneratedStructure() { StructureId = "DesignNameMaxLth" };
+            _generatedStructureModel = new GeneratedStructureModelTest()
+            {
+                StructureId = "DesignStructure1",
+                ClearFirst = true,
+                IsTemporary = false,
+                StructureColor = Colors.Black
+            };
             InstructionViewModels = new ObservableCollection<InstructionViewModel>();
             EditMode = true;
             InstructionViewModels.Add(new InstructionViewModel());
@@ -64,22 +98,68 @@ namespace OptiMate.ViewModels
             InstructionViewModels.Add(new InstructionViewModel());
 
         }
-        public bool EditMode { get; private set; } = false;
+
+        private void RegisterEvents()
+        {
+            _ea.GetEvent<RemovingInstructionViewModelEvent>().Subscribe(OnRemovingInstructionViewModel);
+        }
+
+        private void OnRemovingInstructionViewModel(InstructionViewModel ivm)
+        {
+            if (InstructionViewModels.Contains(ivm))
+            {
+                InstructionViewModels.Remove(ivm);
+                GC.Collect();
+                GC.WaitForFullGCComplete();
+                RaisePropertyChangedEvent(nameof(InstructionViewModels));
+                _ea.GetEvent<DataValidationRequiredEvent>().Publish();
+            }
+        }
+
+        public bool OverwriteColor
+        {
+            get
+            {
+                return _generatedStructureModel.OverwriteColor;
+            }
+            set
+            {
+                if (value != _generatedStructureModel.OverwriteColor)
+                {
+                    _generatedStructureModel.OverwriteColor = value;
+                    isModified = true;
+                }
+            }
+        }
+
+
+        public bool EditMode { get; set; } = false;
         public bool isModified { get; private set; } = false;
 
         public string StructureId
         {
             get
             {
-                return _generatedStructure.StructureId;
+                return _generatedStructureModel.StructureId;
             }
             set
             {
-                if (value != _generatedStructure.StructureId)
+                if (value != _generatedStructureModel.StructureId)
                 {
-                    _model.RenameGeneratedStructure(_generatedStructure.StructureId, value);
+                    _generatedStructureModel.StructureId = value;
+                    if (!_generatedStructureModel.isStructureIdValid)
+                    {
+                        AddError(nameof(StructureId), $"Id of generated structure {value} is invalid. Please correct.");
+                    }
+                    else
+                    {
+                        RemoveError(nameof(StructureId));
+                    }
                     isModified = true;
+                    RaisePropertyChangedEvent(nameof(isStructureIdValid));
+                    RaisePropertyChangedEvent(nameof(StructureIdColor));
                     RaisePropertyChangedEvent(nameof(WarningVisibility_GenStructureChanged));
+                    _ea.GetEvent<DataValidationRequiredEvent>().Publish();
                 }
             }
         }
@@ -88,30 +168,31 @@ namespace OptiMate.ViewModels
         {
             get
             {
-                return _generatedStructure.ClearFirst;
+
+                return _generatedStructureModel.ClearFirst;
             }
             set
             {
-                if (value != _generatedStructure.ClearFirst)
+                if (value != _generatedStructureModel.ClearFirst)
                 {
-                    _generatedStructure.ClearFirst = value;
+                    _generatedStructureModel.ClearFirst = value;
                     isModified = true;
                     RaisePropertyChangedEvent(nameof(WarningVisibility_GenStructureChanged));
                 }
             }
         }
 
-        public bool isTemporary 
+        public bool isTemporary
         {
             get
             {
-                return _generatedStructure.IsTemporary;
+                return _generatedStructureModel.IsTemporary;
             }
             set
             {
-                if (value != _generatedStructure.IsTemporary)
+                if (value != _generatedStructureModel.IsTemporary)
                 {
-                    _generatedStructure.IsTemporary = value;
+                    _generatedStructureModel.IsTemporary = value;
                     isModified = true;
                     RaisePropertyChangedEvent(nameof(WarningVisibility_GenStructureChanged));
                 }
@@ -120,14 +201,29 @@ namespace OptiMate.ViewModels
 
         public ObservableCollection<InstructionViewModel> InstructionViewModels { get; set; } = new ObservableCollection<InstructionViewModel>();
 
-        private bool isStructureIdValid
+        public bool isStructureIdValid
         {
             get
             {
+                var temp = !HasError(nameof(StructureId));
                 return !HasError(nameof(StructureId));
             }
         }
 
+        public SolidColorBrush StructureIdColor
+        {
+            get
+            {
+                if (HasError(nameof(StructureId)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
         public string StructureIdError
         {
             get
@@ -139,35 +235,24 @@ namespace OptiMate.ViewModels
                     return string.Join("\r", (List<string>)errors);
             }
         }
-        public SolidColorBrush StructureIdColor
-        {
-            get
-            {
-                if (isStructureIdValid)
-                    return new SolidColorBrush(Colors.White);
-                else
-                    return new SolidColorBrush(Colors.Orange);
-            }
-        }
 
-        
         public Color StructureColor
         {
             get
             {
-                return _model.GetGeneratedStructureColor(_generatedStructure.StructureId);
+                return _generatedStructureModel.StructureColor;
             }
             set
             {
-                if (value != _model.GetGeneratedStructureColor(_generatedStructure.StructureId))
+                if (value != _generatedStructureModel.StructureColor)
                 {
-                    _model.SetGeneratedStructureColor(_generatedStructure.StructureId, value);
+                    _generatedStructureModel.StructureColor = value;
                     isModified = true;
                     RaisePropertyChangedEvent(nameof(StructureColor));
                 }
             }
         }
-        
+
 
         public bool ConfirmRemoveStructurePopupVisibility { get; set; }
 
@@ -191,20 +276,13 @@ namespace OptiMate.ViewModels
                 SeriLogModel.AddError("Could not find prior instruction when inserting new instruction, using index=0", e);
                 index = 0;
             }
-            var newInstruction = _model.AddInstruction(_generatedStructure, OperatorTypes.undefined, index+1);
-            InstructionViewModels.Insert(index + 1, new InstructionViewModel(newInstruction, _generatedStructure, _model, _ea));
+            var newInstructionModel = _generatedStructureModel.AddInstruction(OperatorTypes.undefined, index + 1);
+            InstructionViewModels.Insert(index + 1, new InstructionViewModel(newInstructionModel, _generatedStructureModel, _ea));
             RaisePropertyChangedEvent(nameof(InstructionViewModels));
             _ea.GetEvent<DataValidationRequiredEvent>().Publish();
-            SeriLogModel.AddLog($"Added new instruction to {_generatedStructure.StructureId}");
+            SeriLogModel.AddLog($"Added new instruction to {_generatedStructureModel.StructureId}");
         }
 
-        public ICommand RemoveInstructionCommand
-        {
-            get
-            {
-                return new DelegateCommand(RemoveInstruction);
-            }
-        }
 
         public int NumInstructions
         {
@@ -214,11 +292,7 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public void RemoveInstruction(object param = null)
-        {
-            var ivm = (param as object[])[0] as InstructionViewModel;
-            ivm.RemoveInstruction();
-        }
+
 
         public ICommand EditGenStructureCommand
         {
@@ -248,7 +322,7 @@ namespace OptiMate.ViewModels
         {
             bool isValid = true;
             hasWarnings = false;
-            ClearErrors();
+            ClearErrors(nameof(ValidateInputs));
             if (HasErrors)
             {
                 aggregateWarnings.AddRange(GetAllErrors());
@@ -262,7 +336,7 @@ namespace OptiMate.ViewModels
                     aggregateWarnings.AddRange(ivm.GetAllErrors());
                     isValid = false;
                     hasWarnings = true;
-                    AddError(nameof(InstructionViewModels), "One or more instructions have warnings or errors");
+                    AddError(nameof(ValidateInputs), "One or more instructions have warnings or errors");
                 }
                 if (ivm.isModified)
                 {

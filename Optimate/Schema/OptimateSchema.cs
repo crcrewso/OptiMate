@@ -90,6 +90,12 @@ namespace OptiMate {
         
         private string eclipseStructureIdField;
         
+        private bool performSmallVoxelCheckField;
+        
+        public TemplateStructure() {
+            this.performSmallVoxelCheckField = false;
+        }
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("Alias")]
         public string[] Alias {
@@ -122,13 +128,27 @@ namespace OptiMate {
                 this.eclipseStructureIdField = value;
             }
         }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool PerformSmallVoxelCheck {
+            get {
+                return this.performSmallVoxelCheckField;
+            }
+            set {
+                this.performSmallVoxelCheckField = value;
+            }
+        }
     }
     
     /// <remarks/>
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Partition))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Margin))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(AsymmetricCrop))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(AsymmetricMargin))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Crop))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(SetHU))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(ConvertDose))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(SubFrom))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Sub))]
@@ -141,6 +161,48 @@ namespace OptiMate {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class Instruction {
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
+    public partial class Partition : Instruction {
+        
+        private string superiorBoundField;
+        
+        private string inferiorBoundField;
+        
+        public Partition() {
+            this.superiorBoundField = "";
+            this.inferiorBoundField = "";
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string SuperiorBound {
+            get {
+                return this.superiorBoundField;
+            }
+            set {
+                this.superiorBoundField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string InferiorBound {
+            get {
+                return this.inferiorBoundField;
+            }
+            set {
+                this.inferiorBoundField = value;
+            }
+        }
     }
     
     /// <remarks/>
@@ -480,6 +542,28 @@ namespace OptiMate {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
+    public partial class SetHU : Instruction {
+        
+        private short huField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public short HU {
+            get {
+                return this.huField;
+            }
+            set {
+                this.huField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class ConvertDose : Instruction {
         
         private ushort doseLevelField;
@@ -648,10 +732,13 @@ namespace OptiMate {
         
         private string structureColorField;
         
+        private bool overwriteColorField;
+        
         public GeneratedStructure() {
             this.isTemporaryField = false;
             this.clearFirstField = true;
             this.dicomTypeField = "CONTROL";
+            this.overwriteColorField = false;
         }
         
         /// <remarks/>
@@ -721,6 +808,18 @@ namespace OptiMate {
                 this.structureColorField = value;
             }
         }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool OverwriteColor {
+            get {
+                return this.overwriteColorField;
+            }
+            set {
+                this.overwriteColorField = value;
+            }
+        }
     }
     
     /// <remarks/>
@@ -742,6 +841,8 @@ namespace OptiMate {
         [System.Xml.Serialization.XmlElementAttribute("Crop", typeof(Crop))]
         [System.Xml.Serialization.XmlElementAttribute("Margin", typeof(Margin))]
         [System.Xml.Serialization.XmlElementAttribute("Or", typeof(Or))]
+        [System.Xml.Serialization.XmlElementAttribute("Partition", typeof(Partition))]
+        [System.Xml.Serialization.XmlElementAttribute("SetHU", typeof(SetHU))]
         [System.Xml.Serialization.XmlElementAttribute("Sub", typeof(Sub))]
         [System.Xml.Serialization.XmlElementAttribute("SubFrom", typeof(SubFrom))]
         public Instruction[] Items {

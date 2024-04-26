@@ -18,10 +18,10 @@ namespace OptiMate.ViewModels
 {
     public class TemplateStructureViewModel : ObservableObject
     {
-        private MainModel _model;
-        private TemplateStructure _templateStructure;
+        private TemplateModel _templateModel;
+        private ITemplateStructureModel _templateStructureModel;
         private IEventAggregator _ea;
-        
+
         public ObservableCollection<EclipseStructureViewModel> EclipseIds { get; set; } = new ObservableCollection<EclipseStructureViewModel>()
         {
             new EclipseStructureViewModel(){EclipseId = "DesignEclipseId1" },
@@ -50,18 +50,26 @@ namespace OptiMate.ViewModels
         {
             get
             {
-                return _templateStructure.TemplateStructureId;
+                return _templateStructureModel.TemplateStructureId;
             }
             set
             {
-                if (_model.IsNewTemplateStructureIdValid(value))
+                if (_templateModel.IsNewTemplateStructureIdValid(value))
                 {
-                    _model.RenameTemplateStructure(_templateStructure.TemplateStructureId, value);
+                    _templateModel.RenameTemplateStructure(_templateStructureModel.TemplateStructureId, value);
                     RaisePropertyChangedEvent(nameof(StructureIdColor));
                 }
             }
         }
 
+        public bool PerformSmallVolumeCheck
+        {
+            get { return _templateStructureModel.PerformSmallVolumeCheck; }
+            set
+            {
+                _templateStructureModel.PerformSmallVolumeCheck = value;
+            }
+        }
 
         private EclipseStructureViewModel _selectedEclipseStructure;
         public EclipseStructureViewModel SelectedEclipseStructure
@@ -74,16 +82,63 @@ namespace OptiMate.ViewModels
             {
                 if (value != _selectedEclipseStructure)
                 {
-                    _selectedEclipseStructure = value;
-                    _templateStructure.EclipseStructureId = value.EclipseId;
                     ClearErrors(nameof(SelectedEclipseStructure));
-                    RaisePropertyChangedEvent(nameof(WarningVisibilityDoesNotUseAlias));
-                    RaisePropertyChangedEvent(nameof(WarningVisibilityMappedStructureEmpty));
+                    _selectedEclipseStructure = value;
+                    _templateStructureModel.EclipseStructureId = value.EclipseId;
+                    if (string.IsNullOrEmpty(_selectedEclipseStructure.EclipseId))
+                    {
+                        AddError(nameof(SelectedEclipseStructure), $"Please provide mapping for {TemplateStructureId}.");
+                    }
+                    RaisePropertyChangedEvent(nameof(TemplateStructureWarningVisibility));
                     RaisePropertyChangedEvent(nameof(MappedStructureWarningColor));
+                    RunSmallVolumeCheck();
                     _ea.GetEvent<DataValidationRequiredEvent>().Publish();
                 }
             }
         }
+
+        private async void RunSmallVolumeCheck()
+        {
+            if (PerformSmallVolumeCheck)
+            {
+                var results = await _templateStructureModel.CheckSmallVolumes();
+                if (results.Success && results.HasSmallVolumes)
+                {
+                    SmallVolumeDetected = true;
+                    var smallVolumeWarningText = new List<string>();
+                    foreach (var contour in results.SmallVolumesLocation)
+                    {
+                        smallVolumeWarningText.Add($"Centroid: X = {contour.x:0.0} cm, Y = {contour.y:0.0} cm, Z = {contour.z:0.0} cm");
+                    }
+                    ReviewSmallVolumeWarningsVM.Description = Helpers.HTMLWarningFormatter(smallVolumeWarningText);
+                    ReviewSmallVolumeWarningsVisibility = Visibility.Visible;
+                }
+                else
+                {
+                    SmallVolumeDetected = false;
+                    ReviewSmallVolumeWarningsVM.Description = "";
+                    ReviewSmallVolumeWarningsVisibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        public Visibility ReviewSmallVolumeWarningsVisibility { get; set; } = Visibility.Collapsed;
+        public bool ReviewSmallVolumeWarningsPopupVisibility { get; set; }
+        public DescriptionViewModel ReviewSmallVolumeWarningsVM { get; set; } = new DescriptionViewModel("Small contours detected at the following locations:", "");
+
+        public ICommand ReviewSmallVolumeWarningsCommand
+        {
+            get
+            {
+                return new DelegateCommand(ReviewSmallVolumeWarnings);
+            }
+        }
+
+        private void ReviewSmallVolumeWarnings(object obj)
+        {
+            ReviewSmallVolumeWarningsPopupVisibility = true;
+        }
+
         public bool isNew { get; set; }
         public SolidColorBrush StructureIdColor
         {
@@ -111,7 +166,7 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public Visibility WarningVisibilityDoesNotUseAlias
+        public Visibility TemplateStructureWarningVisibility
         {
             get
             {
@@ -119,28 +174,7 @@ namespace OptiMate.ViewModels
                 {
                     return Visibility.Collapsed;
                 }
-                if (isAnAlias(SelectedEclipseStructure.EclipseId))
-                {
-                    return Visibility.Collapsed;
-                }
-                else
-                {
-                    return Visibility.Visible;
-                }
-            }
-        }
-
-        public bool ConfirmRemoveStructurePopupVisibility { get; set; }= false;
-
-        public Visibility WarningVisibilityMappedStructureEmpty
-        {
-            get
-            {
-                if (SelectedEclipseStructure == null)
-                {
-                    return Visibility.Collapsed;
-                }
-                else if (_model.IsEmpty(SelectedEclipseStructure.EclipseId))
+                if (_templateModel.IsEmpty(SelectedEclipseStructure.EclipseId))
                 {
                     return Visibility.Visible;
                 }
@@ -151,30 +185,33 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public TemplateStructureViewModel(TemplateStructure templateStructure, MainModel model, IEventAggregator ea, bool isNew = false)
+        public bool ConfirmRemoveStructurePopupVisibility { get; set; } = false;
+
+        public TemplateStructureViewModel(TemplateStructureModel templateStructure, TemplateModel model, IEventAggregator ea, bool isNew = false)
         {
-            _templateStructure = templateStructure;
-            _model = model;
+            _templateStructureModel = templateStructure;
+            _templateModel = model;
             _ea = ea;
             RegisterEvents();
             this.isNew = isNew;
             EclipseIds.Clear();
-            foreach (var Id in _model.GetEclipseStructureIds())
+            bool isMapped = false;
+            foreach (var Id in _templateModel.GetEclipseStructureIds())
             {
-                EclipseIds.Add(new EclipseStructureViewModel(Id, _model));
+                var esVM = new EclipseStructureViewModel(Id, _templateModel.IsEmpty(Id));
+                EclipseIds.Add(esVM);
+                if (_templateStructureModel.EclipseStructureId == Id)
+                {
+                    SelectedEclipseStructure = esVM;
+                    isMapped = true;
+                }
+            }
+            if (!isMapped)
+            {
+                AddError(nameof(SelectedEclipseStructure), $"Please provide mapping for {TemplateStructureId}.");
+                RaisePropertyChangedEvent(nameof(MappedStructureWarningColor));
             }
             ea.GetEvent<StructureGeneratedEvent>().Subscribe(OnNewStructureCreated);
-            ea.GetEvent<NewTemplateStructureEvent>().Subscribe(OnNewTemplateStructure);
-            if (templateStructure.Alias != null)
-            {
-                foreach (string alias in templateStructure.Alias)
-                {
-                    Aliases.Add(alias);
-                }
-                ApplyAliases();
-            }
-            else
-                AddError(nameof(SelectedEclipseStructure), $"No alias for template structure {TemplateStructureId} was found in the structure set.");
             RaisePropertyChangedEvent(nameof(MappedStructureWarningColor));
         }
 
@@ -195,59 +232,11 @@ namespace OptiMate.ViewModels
             }
         }
 
-        private void OnNewTemplateStructure(NewTemplateStructureEventInfo info)
-        {
-            if (!EclipseIds.Select(x => x.EclipseId).Contains(info.Structure.TemplateStructureId))
-            {
-                EclipseIds.Add(new EclipseStructureViewModel(info.Structure.TemplateStructureId, _model));
-            }
-        }
-
-        public TemplateStructureViewModel(string newTemplateStructureId, MainModel model, IEventAggregator ea)
-        {
-            _templateStructure = new TemplateStructure() { TemplateStructureId = newTemplateStructureId };
-            _model = model;
-            _ea = ea;
-            isNew = true;
-            EclipseIds.Clear();
-            foreach (var Id in _model.GetEclipseStructureIds())
-            {
-                EclipseIds.Add(new EclipseStructureViewModel(Id, _model));
-            }
-        }
-
-        private void ApplyAliases()
-        {
-            foreach (var eclipseId in EclipseIds.Select(x => x.EclipseId))
-            {
-                if (isAnAlias(eclipseId))
-                {
-                    SelectedEclipseStructure = EclipseIds.FirstOrDefault(x => x.EclipseId == eclipseId);
-                }
-            }
-            if (SelectedEclipseStructure == null)
-            {
-                AddError(nameof(SelectedEclipseStructure), $"No alias for template structure {TemplateStructureId} was found in the structure set.");
-            }
-        }
-
-        private bool isAnAlias(string alias)
-        {
-            if (Aliases.Select(x=>x.CompactForm()).Contains(alias.CompactForm(), StringComparer.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         private void OnNewStructureCreated(StructureGeneratedEventInfo info)
         {
             if (!EclipseIds.Select(x => x.EclipseId).Contains(info.Structure.StructureId))
             {
-                EclipseIds.Add(new EclipseStructureViewModel(info.Structure.StructureId, _model));
+                EclipseIds.Add(new EclipseStructureViewModel(info.Structure.StructureId, _templateModel.IsEmpty(info.Structure.StructureId)));
             }
         }
 
@@ -265,11 +254,11 @@ namespace OptiMate.ViewModels
         public TemplateStructureViewModel()
         {
             //Design only
-            _templateStructure = new TemplateStructure() { TemplateStructureId = "DesignTemplateId", Alias = new string[] { "DesignAlias" } };
+            _templateStructureModel = new TemplateStructureModelTest() { TemplateStructureId = "DesignTemplateId", Aliases = new List<string>() { "DesignAlias" } };
         }
 
         private bool _editTemplateStructurePopupVisibility = false;
-        public bool EditTemplateStructurePopupVisibility 
+        public bool EditTemplateStructurePopupVisibility
         {
             get
             {
@@ -290,11 +279,13 @@ namespace OptiMate.ViewModels
             }
         }
 
+        public bool SmallVolumeDetected { get; private set; }
+
         private void EditTemplateStructure(object obj)
         {
             string templateStructureId = obj as string;
             EditTemplateStructurePopupVisibility ^= true;
-            EditControlVM = new EditControlViewModel(templateStructureId, _model.GetTemplateStructureAliases(templateStructureId), _model, _ea);
+            EditControlVM = new EditControlViewModel(templateStructureId, _templateModel.GetTemplateStructureModel(templateStructureId), _ea);
         }
     }
 }

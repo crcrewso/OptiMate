@@ -13,6 +13,8 @@
       <xs:enumeration value="sub" />
       <xs:enumeration value="subfrom" />
       <xs:enumeration value="convertDose" />
+      <xs:enumeration value="partition" />
+      <xs:enumeration value="setHU" />
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="emptyString">
@@ -46,6 +48,7 @@
     </xs:sequence>
     <xs:attribute name="TemplateStructureId" type="xs:string" use="required"/>
     <xs:attribute name="EclipseStructureId" type="xs:string" />
+    <xs:attribute name="PerformSmallVoxelCheck" type="xs:boolean" use="optional" default="false" />
   </xs:complexType>
   <xs:complexType name="GeneratedStructure">
     <xs:complexContent mixed="false">
@@ -65,6 +68,8 @@
                   <xs:element name="Crop" type="OptiMate:Crop"/>
                   <xs:element name="AsymmetricCrop" type="OptiMate:AsymmetricCrop"/>
                   <xs:element name="SubFrom" type="OptiMate:SubFrom"/>
+                  <xs:element name="Partition" type="OptiMate:Partition"/>
+                  <xs:element name="SetHU" type="OptiMate:SetHU"/>
                 </xs:choice>
               </xs:sequence>
             </xs:complexType>
@@ -75,6 +80,7 @@
         <xs:attribute name="ClearFirst" type="xs:boolean" use="optional" default="true"/>
         <xs:attribute name="DicomType" type="xs:string" default="CONTROL"/>
         <xs:attribute name="StructureColor" type="OptiMate:colorString" />
+        <xs:attribute name="OverwriteColor" type="xs:boolean" use="optional" default="false" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -120,6 +126,13 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="SetHU">
+    <xs:complexContent mixed="false">
+      <xs:extension base="OptiMate:Instruction">
+        <xs:attribute name="HU" type="xs:short" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="Crop">
     <xs:complexContent mixed="false">
       <xs:extension base="OptiMate:Instruction">
@@ -161,6 +174,14 @@
       <xs:extension base="OptiMate:Instruction">
         <xs:attribute name="MarginType" type="OptiMate:MarginTypes" use="optional" default="Outer"/>
         <xs:attribute name="IsotropicMargin" type="OptiMate:MarginRangeOrEmpty" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="Partition">
+    <xs:complexContent mixed="false">
+      <xs:extension base="OptiMate:Instruction">
+        <xs:attribute name="SuperiorBound" type="xs:string" use="optional" default=""/>
+        <xs:attribute name="InferiorBound" type="xs:string" use="optional" default=""/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

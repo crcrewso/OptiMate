@@ -70,6 +70,11 @@ namespace OptiMate
             }
         }
 
+        public List<string> PropertiesWithErrrors()
+        {
+            return _errors.Keys.ToList();
+        }
+
         
 
         public void RemoveError(string propertyName)

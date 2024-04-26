@@ -16,7 +16,7 @@ namespace OptiMate.ViewModels
 {
     public class EditControlViewModel : ObservableObject
     {
-        private MainModel _model;
+        private TemplateStructureModel _templateStructureModel;
         private IEventAggregator _ea;
 
         public bool UserConfirmed { get; private set; } = false;
@@ -30,11 +30,7 @@ namespace OptiMate.ViewModels
             }
             set
             {
-                if (_model.IsNewTemplateStructureIdValid(value))
-                {
-                    _model.RenameTemplateStructure(_templateStructureId, value);
-                    _templateStructureId = value;
-                }
+                _templateStructureModel.TemplateStructureId = value;
             }
         }
 
@@ -46,7 +42,7 @@ namespace OptiMate.ViewModels
             {
                 ClearErrors(nameof(NewAlias));
                 _newAlias = value;
-                if (!_model.IsAliasValid(TemplateStructureId, value))
+                if (!_templateStructureModel.IsAliasValid(value))
                 {
                     AddError(nameof(NewAlias), "Alias is invalid");
                 }
@@ -54,6 +50,15 @@ namespace OptiMate.ViewModels
             }
         }
 
+        public bool PerformSmallStructureChecks
+        {
+
+            get { return _templateStructureModel.PerformSmallVolumeCheck; }
+            set
+            {
+                _templateStructureModel.PerformSmallVolumeCheck = value;
+            }
+        }
         public SolidColorBrush NewAliasTextBoxColor
         {
             get
@@ -74,12 +79,12 @@ namespace OptiMate.ViewModels
         public ObservableCollection<string> Aliases { get; private set; } = new ObservableCollection<string>() { "DesignAlias1", "DesignAlias2", "DesignAlias3", "DesignAlias4" };
 
         public EditControlViewModel() { }
-        public EditControlViewModel(string templateStructureId, List<string> aliases, MainModel model, IEventAggregator ea)
+        public EditControlViewModel(string templateStructureId, TemplateStructureModel templateStructureModel, IEventAggregator ea)
         {
             _templateStructureId = templateStructureId;
+            _templateStructureModel = templateStructureModel;
             Aliases.Clear();
-            Aliases.AddRange(aliases);
-            _model = model;
+            Aliases.AddRange(templateStructureModel.Aliases);
             _ea = ea;
         }
 
@@ -91,13 +96,13 @@ namespace OptiMate.ViewModels
 
         private void AddNewAlias(object obj)
         {
-            if (!_model.IsAliasValid(TemplateStructureId, _newAlias))
+            if (!_templateStructureModel.IsAliasValid(_newAlias))
             {
                 return;
             }
             else
             {
-                _model.AddNewTemplateStructureAlias(TemplateStructureId, NewAlias);
+                _templateStructureModel.AddNewTemplateStructureAlias(NewAlias);
                 Aliases.Add(NewAlias);
             }
         }
@@ -110,7 +115,7 @@ namespace OptiMate.ViewModels
         private void RemoveAlias(object obj)
         {
             string alias = obj as string;
-            _model.RemoveTemplateStructureAlias(TemplateStructureId, alias);
+            _templateStructureModel.RemoveTemplateStructureAlias(alias);
             Aliases.Remove(alias);
         }
 
@@ -118,7 +123,7 @@ namespace OptiMate.ViewModels
 
         internal void ReorderAliases(int a, int b)
         {
-            _model.ReorderTemplateStructureAliases(TemplateStructureId, a, b);
+            _templateStructureModel.ReorderTemplateStructureAliases(a, b);
             Aliases.Move(a, b);
         }
 

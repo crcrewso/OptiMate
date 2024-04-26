@@ -44,11 +44,15 @@ namespace OptiMate.Models
         private IEventAggregator _ea = null;
         private OptiMateTemplate _template = null;
 
-        private List<string> _availableStructureIds = new List<string>();
         public string StructureSetId { get; private set; }
         public MainModel(EsapiWorker ew)
         {
             _ew = ew;
+        }
+
+        internal void SetEventAggregator(IEventAggregator ea)
+        {
+            _ea = ea;
         }
 
         public async void Initialize()
@@ -95,7 +99,6 @@ namespace OptiMate.Models
             bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, ss, ui) =>
             {
                 p.BeginModifications();
-                _availableStructureIds = ss.Structures.Select(x => x.Id).ToList();
                 StructureSetId = ss.Id;
                 // one time initialization
                 isStructureEmpty = new Dictionary<string, bool>();
@@ -106,113 +109,7 @@ namespace OptiMate.Models
             }));
         }
 
-        public List<string> GetEclipseStructureIds(string thisGenStructureId = "")
-        {
-            return new List<string>(_availableStructureIds);
-        }
-
-        public List<string> GetGeneratedStructureIds()
-        {
-            return new List<string>(_template.GeneratedStructures.Select(x => x.StructureId));
-        }
-        public List<string> GetAvailableTemplateTargetIds(string thisGenStructureId = "")
-        {
-            var availableStructures = _template.TemplateStructures.Select(x => x.TemplateStructureId).ToList();
-            availableStructures.AddRange(_template.GeneratedStructures.Take(_template.GeneratedStructures.Select(x => x.StructureId).ToList().IndexOf(thisGenStructureId)).Select(x => x.StructureId));
-            return availableStructures;
-        }
-
-        internal async Task<List<string>> GenerateStructures()
-        {
-            int index = 0;
-            List<string> completionWarnings = new List<string>();
-            foreach (var genStructure in _template.GeneratedStructures)
-            {
-                _ea.GetEvent<StructureGeneratingEvent>().Publish(new StructureGeneratingEventInfo { Structure = genStructure, IndexInQueue = index, TotalToGenerate = _template.GeneratedStructures.Count() });
-                List<TemplateStructure> augmentedList = GetAugmentedTemplateStructures(genStructure.StructureId);
-                var structureModel = new GenerateStructureModel(_ew, _ea, genStructure, augmentedList);
-                await structureModel.GenerateStructure();
-                completionWarnings.AddRange(structureModel.GetCompletionWarnings());
-                _ea.GetEvent<StructureGeneratedEvent>().Publish(new StructureGeneratedEventInfo { Structure = genStructure, IndexInQueue = index++, TotalToGenerate = _template.GeneratedStructures.Count() });
-            }
-            foreach (var tempStructure in _template.GeneratedStructures.Where(x => x.IsTemporary))
-            {
-                _ea.GetEvent<GeneratedStructureCleaningUpEvent>().Publish(tempStructure.StructureId);
-                await RemoveTemporaryGenStructure(tempStructure.StructureId);
-            }
-            return completionWarnings;
-        }
-
-        internal System.Windows.Media.Color GetGeneratedStructureColor(string structureId)
-        {
-            var genStructure = _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == structureId);
-            if (genStructure != null)
-            {
-                var genStructureModel = new GenerateStructureModel(_ew, _ea, genStructure, GetAugmentedTemplateStructures(genStructure.StructureId));
-                return genStructureModel.GetStructureColor();
-            }
-            else
-                return Colors.Magenta;
-
-
-        }
-
-        internal bool isDoseLevelValid(ushort? value)
-        {
-            if (value == null || value < 0 || value > 50000)
-                return false;
-            else
-                return true;
-        }
-
-        internal void SetGeneratedStructureColor(string structureId, System.Windows.Media.Color value)
-        {
-            var genStructure = _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == structureId);
-            if (genStructure != null)
-            {
-                genStructure.StructureColor = $"{value.R:000},{value.G:000},{value.B:000}";
-            }
-        }
-
-        private async Task RemoveTemporaryGenStructure(string structureId)
-        {
-            try
-            {
-                await _ew.AsyncRunStructureContext((p, ss, ui) =>
-                {
-                    var structureToRemove = ss.Structures.First(x => x.Id == structureId);
-                    if (structureToRemove != null)
-                        ss.RemoveStructure(structureToRemove);
-                });
-                SeriLogModel.AddLog($"Temporary structure {structureId} removed from template {_template.TemplateDisplayName}");
-            }
-            catch (Exception ex)
-            {
-                SeriLogModel.AddError($"Error deleting temporary structure {structureId} from template {_template.TemplateDisplayName}", ex);
-            }
-
-        }
-
-        private List<TemplateStructure> GetAugmentedTemplateStructures(string structureId)
-        {
-            var augmentedList = _template.TemplateStructures.ToList();
-            foreach (var genStructure in _template.GeneratedStructures.Take(_template.GeneratedStructures.Select(x => x.StructureId).ToList().IndexOf(structureId)))
-            {
-                augmentedList.Add(new TemplateStructure() { TemplateStructureId = genStructure.StructureId, EclipseStructureId = genStructure.StructureId });
-            }
-            return augmentedList;
-        }
-
-        public List<string> GetTemplateStructureIds()
-        {
-            return new List<string>(_template.TemplateStructures.Select(x => x.TemplateStructureId));
-        }
-        internal void SetEventAggregator(IEventAggregator ea)
-        {
-            _ea = ea;
-        }
-
-        internal OptiMateTemplate LoadTemplate(TemplatePointer value)
+        internal TemplateModel LoadTemplate(TemplatePointer value)
         {
             XmlSerializer Ser = new XmlSerializer(typeof(OptiMateTemplate));
             if (value != null)
@@ -236,7 +133,7 @@ namespace OptiMate.Models
                     if (ValidateTemplate())
                     {
                         SeriLogModel.AddLog($"Template [{value.TemplateDisplayName}] validated");
-                        return _template;
+                        return new TemplateModel(_template, _ew, _ea, isStructureEmpty);
                     }
                     else
                     {
@@ -331,292 +228,22 @@ namespace OptiMate.Models
             return (eclipseStructureId.Count() > 0 && eclipseStructureId.Count() <= 16);
         }
 
-        private bool IsValidReferenceStructure(string genStructureId, string templateStructureId)
-        {
-            var augmentedList = GetAugmentedTemplateStructures(genStructureId);
-            if (augmentedList.Any(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private string getNewTemplateStructureId()
-        {
-            int count = 1;
-            string baseId = "NewTS";
-            while (!IsNewTemplateStructureIdValid(baseId + count))
-            {
-                count++;
-            }
-            return baseId + count;
-        }
-        private string getNewGenStructureId()
-        {
-            int count = 1;
-            string baseId = "NewGS";
-            while (!IsNewGeneratedStructureIdValid(baseId + count))
-            {
-                count++;
-            }
-            return baseId + count;
-        }
-        internal TemplateStructure AddTemplateStructure()
-        {
-            var newTemplateStructure = new TemplateStructure()
-            {
-                TemplateStructureId = getNewTemplateStructureId(),
-                Alias = new string[] { }
-            };
-            var templateList = _template.TemplateStructures.ToList();
-            templateList.Add(newTemplateStructure);
-            _template.TemplateStructures = templateList.ToArray();
-            _ea.GetEvent<NewTemplateStructureEvent>().Publish(new NewTemplateStructureEventInfo { Structure = newTemplateStructure });
-            return newTemplateStructure;
-        }
-
-        internal void RemoveTemplateStructure(string templateStructureId)
-        {
-            var templateStructures = _template.TemplateStructures.ToList();
-            var removedStructure = templateStructures.FirstOrDefault(x => x.TemplateStructureId == templateStructureId);
-            RemoveAllReferencesToTemplateStructure(removedStructure);
-            templateStructures.Remove(removedStructure);
-            _template.TemplateStructures = templateStructures.ToArray();
-            _ea.GetEvent<RemovedTemplateStructureEvent>().Publish(new RemovedTemplateStructureEventInfo { RemovedStructure = removedStructure });
-        }
-
-        private void RemoveAllReferencesToTemplateStructure(TemplateStructure removedStructure)
-        {
-            List<string> toRemove = new List<string>();
-            foreach (GeneratedStructure genStructure in _template.GeneratedStructures)
-            {
-                var instructionItems = genStructure.Instructions.Items.ToList();
-                foreach (Instruction instruction in instructionItems)
-                {
-                    switch (instruction)
-                    {
-                        case Or or:
-                            if (or.TemplateStructureId == removedStructure.TemplateStructureId)
-                            {
-                                RemoveInstruction(genStructure.StructureId, instruction);
-                            }
-                            break;
-                        case And and:
-                            if (and.TemplateStructureId == removedStructure.TemplateStructureId)
-                            {
-                                RemoveInstruction(genStructure.StructureId, instruction);
-                            }
-                            break;
-                        case Crop crop:
-                            if (crop.TemplateStructureId == removedStructure.TemplateStructureId)
-                            {
-                                RemoveInstruction(genStructure.StructureId, instruction);
-                            }
-                            break;
-                        case SubFrom subfrom:
-                            if (subfrom.TemplateStructureId == removedStructure.TemplateStructureId)
-                            {
-                                RemoveInstruction(genStructure.StructureId, instruction);
-                            }
-                            break;
-                    }
-                }
-                if (GenStructureWillBeEmpty(genStructure))
-                {
-                    toRemove.Add(genStructure.StructureId);
-                }
-            }
-            foreach (string id in toRemove)
-            {
-                RemoveGeneratedStructure(id);
-            }
-        }
-
-        private bool GenStructureWillBeEmpty(GeneratedStructure genStructure)
-        {
-            if (genStructure == null)
-                return true;
-            else if (genStructure.Instructions.Items.Count() == 0)
-                return true;
-            else
-            {
-                var firstIntruction = genStructure.Instructions.Items.First();
-                switch (firstIntruction)
-                {
-                    case Or or:
-                        if (GetAugmentedTemplateStructures(genStructure.StructureId).Select(x => x.TemplateStructureId).Contains(or.TemplateStructureId))
-                            return false;
-                        else
-                            return true;
-                    case And and:
-                        return true;
-                    case Crop crop:
-                        return true;
-                    case SubFrom subfrom:
-                        return true;
-                    case ConvertDose _:
-                        return false;
-                    case ConvertResolution _:
-                        return false;
-                    default:
-                        return false;
-                }
-            }
-        }
-
-        internal void RemoveInstruction(string structureId, Instruction instruction)
-        {
-            var genStructure = _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == structureId);
-            var instructionItems = genStructure.Instructions.Items.ToList();
-            instructionItems.Remove(instruction);
-            _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == structureId).Instructions.Items = instructionItems.ToArray();
-            _ea.GetEvent<RemovedInstructionEvent>().Publish(new InstructionRemovedEventInfo { Structure = genStructure, RemovedInstruction = instruction });
-        }
-
-        internal int GetInstructionNumber(string structureId, Instruction instruction)
-        {
-            var genStructure = _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == structureId);
-            var temp = genStructure.Instructions.Items.ToList().IndexOf(instruction);
-            return temp;
-        }
-
-        internal Instruction AddInstruction(GeneratedStructure generatedStructure, OperatorTypes selectedOperator, int index)
-        {
-            var newInstruction = CreateInstruction(selectedOperator);
-            var instructionItems = generatedStructure.Instructions.Items.ToList();
-            instructionItems.Insert(index, newInstruction);
-            generatedStructure.Instructions.Items = instructionItems.ToArray();
-            return newInstruction;
-        }
-
-        internal Instruction ReplaceInstruction(GeneratedStructure parentGeneratedStructure, Instruction instruction, OperatorTypes selectedOperator)
-        {
-            var genStructure = _template.GeneratedStructures.FirstOrDefault(x => x.StructureId == parentGeneratedStructure.StructureId);
-            var instructionItems = genStructure.Instructions.Items.ToList();
-            var index = instructionItems.IndexOf(instruction);
-            instructionItems.Remove(instruction);
-            var newInstruction = CreateInstruction(selectedOperator);
-            instructionItems.Insert(index, newInstruction);
-            genStructure.Instructions.Items = instructionItems.ToArray();
-            return newInstruction;
-        }
-
-        private Instruction CreateInstruction(OperatorTypes selectedOperator)
-        {
-
-            switch (selectedOperator)
-            {
-                case OperatorTypes.and:
-                    return new And();
-                case OperatorTypes.or:
-                    return new Or();
-                case OperatorTypes.asymmetricMargin:
-                    return new AsymmetricMargin();
-                case OperatorTypes.sub:
-                    return new Sub();
-                case OperatorTypes.crop:
-                    return new Crop();
-                case OperatorTypes.margin:
-                    return new Margin();
-                case OperatorTypes.convertDose:
-                    return new ConvertDose();
-                case OperatorTypes.subfrom:
-                    return new SubFrom();
-                case OperatorTypes.convertResolution:
-                    return new ConvertResolution();
-                case OperatorTypes.asymmetricCrop:
-                    return new AsymmetricCrop();
-                default:
-                    SeriLogModel.AddLog("Adding new default instruction (Or)...");
-                    return new Or();
-            }
-        }
+        //private bool IsValidReferenceStructure(string genStructureId, string templateStructureId)
+        //{
+        //    var augmentedList = GetAugmentedTemplateStructures(genStructureId);
+        //    if (augmentedList.Any(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase)))
+        //    {
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        return false;
+        //    }
+        //}
 
         private Dictionary<string, bool> isStructureEmpty = null;
-        internal bool IsEmpty(string eclipseStructureId)
-        {
 
-            if (isStructureEmpty.ContainsKey(eclipseStructureId))
-            {
-                return isStructureEmpty[eclipseStructureId];
-            }
-            else
-            {
-                return true;
-            }
-        }
 
-        internal GeneratedStructure AddGeneratedStructure()
-        {
-            var newGeneratedStructure = new GeneratedStructure()
-            {
-                StructureId = getNewGenStructureId(),
-                Instructions = new GeneratedStructureInstructions() { Items = new Instruction[] { new Or() } }
-            };
-            var genStructures = _template.GeneratedStructures.ToList();
-            genStructures.Add(newGeneratedStructure);
-            _template.GeneratedStructures = genStructures.ToArray();
-            _ea.GetEvent<NewGeneratedStructureEvent>().Publish(new NewGeneratedStructureEventInfo { NewStructure = newGeneratedStructure });
-            return newGeneratedStructure;
-        }
-
-        internal void RemoveGeneratedStructure(string structureId)
-        {
-            var genStructures = _template.GeneratedStructures.ToList();
-            var toRemove = genStructures.FirstOrDefault(x => x.StructureId == structureId);
-            if (toRemove != null)
-            {
-                genStructures.Remove(toRemove);
-                _template.GeneratedStructures = genStructures.ToArray();
-                _ea.GetEvent<RemovedGeneratedStructureEvent>().Publish(new RemovedGeneratedStructureEventInfo { RemovedStructureId = structureId });
-            }
-        }
-
-        private bool IsGeneratedStructureIdValid(string value)
-        {
-            if (value.Length <= 16
-                && value.Length > 0
-                && _template.GeneratedStructures.Select(x => x.StructureId).Count(y => string.Equals(y, value, StringComparison.OrdinalIgnoreCase)) <= 1)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        internal bool IsNewGeneratedStructureIdValid(string value)
-        {
-            if (value.Length <= 16
-                && value.Length > 0
-                && !_template.GeneratedStructures.Select(x => x.StructureId).Contains(value, StringComparer.OrdinalIgnoreCase)
-                && !_template.TemplateStructures.Select(x => x.TemplateStructureId).Contains(value, StringComparer.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        internal bool IsNewTemplateStructureIdValid(string value)
-        {
-            if (value.Length <= 16
-                && value.Length > 0
-                && !_template.GeneratedStructures.Select(x => x.StructureId).Contains(value, StringComparer.OrdinalIgnoreCase)
-                && !_template.TemplateStructures.Select(x => x.TemplateStructureId).Contains(value, StringComparer.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
 
         internal IEnumerable<TemplatePointer> GetTemplates()
         {
@@ -710,6 +337,8 @@ namespace OptiMate.Models
             SaveTemplateToPersonal(templateName);
         }
 
+
+
         private bool writeTemplate(string newTemplateId, string fileName)
         {
             var originalTemplateName = _template.TemplateDisplayName;
@@ -765,114 +394,15 @@ namespace OptiMate.Models
             }
         }
 
-        internal void ReorderTemplateStructures(int a, int b)
-        {
-            var TemplateStructures = new ObservableCollection<TemplateStructure>(_template.TemplateStructures);
-            TemplateStructures.Move(a, b);
-            _template.TemplateStructures = TemplateStructures.ToArray();
-        }
 
-        internal void ReorderGeneratedStructures(int a, int b)
-        {
-            var GeneratedStructures = new ObservableCollection<GeneratedStructure>(_template.GeneratedStructures);
-            GeneratedStructures.Move(a, b);
-            _template.GeneratedStructures = GeneratedStructures.ToArray();
-            _ea.GetEvent<GeneratedStructureOrderChangedEvent>().Publish();
-        }
 
-        internal void ReorderTemplateStructureAliases(string templateStructureId, int a, int b)
-        {
-            var templateStructure = _template.TemplateStructures.FirstOrDefault(x => x.TemplateStructureId == templateStructureId);
-            if (templateStructure == null)
-            {
-                SeriLogModel.AddError("Failed to reorder template structure aliases", new Exception("Template structure not found"));
-            }
-            else
-            {
-                var aliases = new ObservableCollection<string>(templateStructure.Alias);
-                aliases.Move(a, b);
-                templateStructure.Alias = aliases.ToArray();
-            }
-        }
 
-        internal void AddNewTemplateStructureAlias(string templateStructureId, string newAlias)
-        {
-            var ts = _template.TemplateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase));
-            if (ts != null)
-            {
-                if (ts.Alias == null)
-                    ts.Alias = new string[] { newAlias };
-                else if (!ts.Alias.Contains(newAlias, StringComparer.OrdinalIgnoreCase))
-                    ts.Alias = ts.Alias.Concat(new string[] { newAlias }).ToArray();
-            }
-        }
 
-        internal bool IsAliasValid(string templateStructureId, string value)
-        {
-            var ts = _template.TemplateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase));
-            if (ts != null)
-            {
-                if (ts.Alias != null && ts.Alias.Contains(value, StringComparer.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            else
-                return false;
-        }
 
-        internal void RemoveTemplateStructureAlias(string templateStructureId, string alias)
-        {
-            var ts = _template.TemplateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase));
-            if (ts != null)
-            {
-                var aliases = ts.Alias.ToList();
-                aliases.Remove(alias);
-                ts.Alias = aliases.ToArray();
-            }
-        }
 
-        internal List<string> GetTemplateStructureAliases(string templateStructureId)
-        {
-            var ts = _template.TemplateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase));
-            if (ts != null)
-            {
-                return ts.Alias == null ? new List<string>() : ts.Alias.ToList();
-            }
-            else
-            {
-                return null;
-            }
-        }
 
-        internal void RenameTemplateStructure(string templateStructureId, string value)
-        {
-            var ts = _template.TemplateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase));
-            if (ts != null && IsNewTemplateStructureIdValid(value))
-            {
-                var eventArgs = new TemplateStructureIdChangedEventInfo() { OldId = ts.TemplateStructureId, NewId = value };
-                string oldId = ts.TemplateStructureId;
-                ts.TemplateStructureId = value;
-                _ea.GetEvent<TemplateStructureIdChangedEvent>().Publish(eventArgs);
-            }
-        }
 
-        internal void RenameGeneratedStructure(string structureId, string newStructureId)
-        {
-            if (IsGeneratedStructureIdValid(newStructureId))
-            {
-                var gs = _template.GeneratedStructures.FirstOrDefault(x => string.Equals(x.StructureId, structureId, StringComparison.OrdinalIgnoreCase));
-                if (gs != null)
-                {
-                    gs.StructureId = newStructureId;
-                    _ea.GetEvent<GeneratedStructureIdChangedEvent>().Publish(new GeneratedStructureIdChangedEventInfo() { OldId = structureId, NewId = newStructureId });
-                }
-            }
-        }
+
     }
 }
 

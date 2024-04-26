@@ -185,5 +185,9 @@ namespace OptiMate
             }
         }
 
+        private void Grid_KeyDown(object sender, KeyEventArgs e)
+        {
+
+        }
     }
 }

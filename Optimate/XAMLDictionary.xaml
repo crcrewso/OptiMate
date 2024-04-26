@@ -424,7 +424,7 @@
     </Style>
     <Style x:Key="CheckBoxStyle1" TargetType="{x:Type CheckBox}">
         <Setter Property="Foreground" Value="PaleGoldenrod"/>
-        <Setter Property="Background" Value="PaleGoldenrod"/>
+        <!--<Setter Property="Background" Value="PaleGoldenrod"/>-->
         <Setter Property="BorderBrush" Value="PaleGoldenrod"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FocusVisualStyle" Value="{StaticResource EmptyCheckBoxFocusVisual}"/>
@@ -457,7 +457,7 @@
     </LinearGradientBrush>
     <Style x:Key="TextBoxStyle1" BasedOn="{x:Null}" TargetType="{x:Type TextBox}">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+        <Setter Property="Background" Value="LightGoldenrodYellow"/>
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
@@ -493,7 +493,6 @@
     </Style>
     <Style x:Key="TextBoxStyle2" BasedOn="{x:Null}" TargetType="{x:Type TextBox}">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
-        <Setter Property="Background" Value="PaleGoldenrod"/>
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorder}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
@@ -505,7 +504,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TextBox}">
-                    <Microsoft_Windows_Themes:ListBoxChrome x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="LightGoldenrodYellow" RenderMouseOver="{TemplateBinding IsMouseOver}" RenderFocused="{TemplateBinding IsKeyboardFocusWithin}" SnapsToDevicePixels="true">
+                    <Microsoft_Windows_Themes:ListBoxChrome x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="Transparent" RenderMouseOver="{TemplateBinding IsMouseOver}" RenderFocused="{TemplateBinding IsKeyboardFocusWithin}" SnapsToDevicePixels="true">
                         <ScrollViewer x:Name="PART_ContentHost" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                     </Microsoft_Windows_Themes:ListBoxChrome>
                     <ControlTemplate.Triggers>

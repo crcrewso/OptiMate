@@ -9,7 +9,7 @@ namespace OptiMate.Models
 {
     public struct StructureGeneratedEventInfo
     {
-        public GeneratedStructure Structure;
+        public IGeneratedStructureModel Structure;
         public int IndexInQueue;
         public int TotalToGenerate;
         public List<string> Warnings;
@@ -17,28 +17,28 @@ namespace OptiMate.Models
 
     public struct StructureGeneratingEventInfo
     {
-        public GeneratedStructure Structure;
+        public IGeneratedStructureModel Structure;
         public int IndexInQueue;
         public int TotalToGenerate;
         public List<string> Warnings;
     }
     public struct InstructionRemovedEventInfo
     {
-        public GeneratedStructure Structure;
-        public Instruction RemovedInstruction;
+        public IGeneratedStructureModel Structure;
+        public IInstructionModel RemovedInstruction;
     }
     public struct InstructionAddedEventInfo
     {
-        public GeneratedStructure Structure;
-        public Instruction AddedInstruction;
+        public IGeneratedStructureModel Structure;
+        public IInstructionModel AddedInstruction;
     }
     public struct NewTemplateStructureEventInfo
     {
-        public TemplateStructure Structure;
+        public TemplateStructureModel NewTemplateStructure;
     }
     public struct RemovedTemplateStructureEventInfo
     {
-        public TemplateStructure RemovedStructure;
+        public string RemovedTemplateStructureId;
     }
     public struct RemovedGeneratedStructureEventInfo
     {
@@ -46,7 +46,7 @@ namespace OptiMate.Models
     }
     public struct NewGeneratedStructureEventInfo
     {
-        public GeneratedStructure NewStructure;
+        public GeneratedStructureModel NewGeneratedStructure;
     }
 
     public struct TemplateStructureIdChangedEventInfo
@@ -62,6 +62,9 @@ namespace OptiMate.Models
     }
 
     public class TemplateSavedEvent : PubSubEvent { }
+
+    public class ReadyForGenStructureCleanupEvent : PubSubEvent { }
+    
     public class TemplateStructureIdChangedEvent : PubSubEvent<TemplateStructureIdChangedEventInfo> { }
     public class GeneratedStructureIdChangedEvent : PubSubEvent<GeneratedStructureIdChangedEventInfo> { }
 

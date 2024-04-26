@@ -249,6 +249,29 @@ namespace OptiMate.Converters
         }
     }
 
+    public class PartitionVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value == null)
+                return Visibility.Collapsed;
+            else
+            {
+                OperatorTypes op = (OperatorTypes)value;
+                if (op == OperatorTypes.partition)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+
+        }
+        public object ConvertBack(object value, Type targetTypes,
+               object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class ConvertDoseVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -271,7 +294,30 @@ namespace OptiMate.Converters
             throw new NotImplementedException();
         }
     }
-    
+
+    public class SetHUVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value == null)
+                return Visibility.Collapsed;
+            else
+            {
+                OperatorTypes op = (OperatorTypes)value;
+                if (op == OperatorTypes.setHU)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+
+        }
+        public object ConvertBack(object value, Type targetTypes,
+               object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class AsymmetricMarginVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -416,11 +462,11 @@ namespace OptiMate.Converters
                     return Operators;
                 }
                 else
-                    return new ObservableCollection<OperatorTypes>() { OperatorTypes.or, OperatorTypes.convertResolution, OperatorTypes.convertDose };
+                    return new ObservableCollection<OperatorTypes>() { OperatorTypes.or, OperatorTypes.convertResolution, OperatorTypes.convertDose, OperatorTypes.setHU };
             }
             else
             {
-                return new ObservableCollection<OperatorTypes>() { OperatorTypes.or, OperatorTypes.convertResolution, OperatorTypes.convertDose };
+                return new ObservableCollection<OperatorTypes>() { OperatorTypes.or, OperatorTypes.convertResolution, OperatorTypes.convertDose, OperatorTypes.setHU };
             }
         }
 
@@ -545,7 +591,7 @@ namespace OptiMate.Converters
                     LD[i] = double.PositiveInfinity;
                 }
                 int c = 0;
-                foreach (string S in AvailableStructures.Select(x=>x.EclipseId))
+                foreach (string S in AvailableStructures.Select(x => x.EclipseId))
                 {
                     var CurrentId = init.ToUpper();
                     var stripString = S.Replace(@"B_", @"").Replace(@"_", @"").ToUpper();

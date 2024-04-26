@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using static OptiMate.ViewModels.TemplateStructureViewModel;
+using System.Windows.Input;
 
 namespace OptiMate.ViewModels
 {
@@ -28,16 +29,18 @@ namespace OptiMate.ViewModels
         asymmetricCrop,
         sub,
         subfrom,
-        convertDose
+        convertDose,
+        partition,
+        setHU
     }
 
     public class RemovingInstructionViewModelEvent : PubSubEvent<InstructionViewModel> { }
+
     public class InstructionViewModel : ObservableObject
     {
-        private MainModel _model;
         private IEventAggregator _ea;
-        private Instruction _instruction;
-        private GeneratedStructure _parentGeneratedStructure;
+        private IInstructionModel _instructionModel;
+        private IGeneratedStructureModel _parentGeneratedStructure;
         public SometimesObservableCollection<OperatorTypes> Operators { get; set; } = new SometimesObservableCollection<OperatorTypes>()
         {
               OperatorTypes.convertResolution,
@@ -49,7 +52,9 @@ namespace OptiMate.ViewModels
               OperatorTypes.asymmetricCrop,
               OperatorTypes.sub,
               OperatorTypes.subfrom,
-              OperatorTypes.convertDose
+              OperatorTypes.convertDose,
+              OperatorTypes.partition,
+              OperatorTypes.setHU
         };
         public SometimesObservableCollection<MarginTypes> MarginTypeOptions { get; set; } = new SometimesObservableCollection<MarginTypes>()
         {
@@ -59,7 +64,6 @@ namespace OptiMate.ViewModels
 
         private OperatorTypes _selectedOperator;
         public OperatorTypes SelectedOperator
-
         {
             get
             {
@@ -70,31 +74,100 @@ namespace OptiMate.ViewModels
                 if (_selectedOperator != value)
                 {
                     isModified = true;
-                    _instruction = _model.ReplaceInstruction(_parentGeneratedStructure, _instruction, value);
+                    _instructionModel = _instructionModel.ReplaceInstruction(value);
                     InitializeViewModel();
                     _selectedOperator = value; // order of setter matters because we don't want to invoke property changed events before the instruction is updated
                     ValidateOperator();
                 }
             }
         }
- 
-        public ushort DoseLevel
+
+        private string _HUValue;
+        public string HUValue
         {
-            get 
+
+            get
             {
-                if (SelectedOperator == OperatorTypes.convertDose)
-                    return (_instruction as ConvertDose).DoseLevel; 
-                else
-                    return 0;
+                return _HUValue;
             }
             set
             {
-                if (_model.isDoseLevelValid(value))
+                _HUValue = value;
+                bool error = true;
+                if (short.TryParse(value, out short result))
                 {
-                    (_instruction as ConvertDose).DoseLevel = value;
-                    isModified = true;
+                    _instructionModel.HUValue = result;
+                    if (_instructionModel.IsHUValueValid && result == _instructionModel.HUValue)
+                    {
+                        ClearErrors(nameof(HUValue));
+                        error = false;
+                        isModified = true;
+                    }
                 }
+                if (error)
+                {
+                    AddError(nameof(HUValue), "Invalid HU value");
+                }
+                RaisePropertyChangedEvent(nameof(HUValueBackgroundColor));
+            }
+        }
 
+        public SolidColorBrush HUValueBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(HUValue)))
+                {
+                    return Brushes.DarkOrange;
+                }
+                else
+                {
+                    return Brushes.LightGoldenrodYellow;
+                }
+            }
+        }
+
+        private string _doseLevel;
+        public string DoseLevel
+        {
+            get
+            {
+                return _doseLevel;
+            }
+            set
+            {
+                _doseLevel = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
+                {
+                    _instructionModel.DoseLevel = result;
+                    if (result == _instructionModel.DoseLevel && _instructionModel.IsDoseLevelValid)
+                    {
+                        ClearErrors(nameof(DoseLevel));
+                        error = false;
+                        isModified = true;
+                    }
+                }
+                if (error)
+                {
+                    AddError(nameof(DoseLevel), $"Invalid dose level value for generated structure {_parentGeneratedStructure.StructureId}");
+                }
+                RaisePropertyChangedEvent(nameof(DoseLevelBackgroundColor));
+            }
+        }
+
+        public SolidColorBrush DoseLevelBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(DoseLevel)))
+                {
+                    return Brushes.DarkOrange;
+                }
+                else
+                {
+                    return Brushes.LightGoldenrodYellow; 
+                }
             }
         }
 
@@ -105,264 +178,269 @@ namespace OptiMate.ViewModels
                 return "Enter a value between 0 and 50";
             }
         }
+        private string _antMargin;
         public string AntMargin
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
-                {
-                    if ((_instruction as AsymmetricMargin)?.AntMargin == null)
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricMargin)?.AntMargin;
-                }
-                else
-                {
-                    return "";
-                }
+                return _antMargin;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
+                _antMargin = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
-                        (_instruction as AsymmetricMargin).AntMargin = value;
-                }
-            }
-        }
-        public string PostMargin
-        {
-
-            get
-            {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
-                {
-                    if ((_instruction as AsymmetricMargin)?.PostMargin == null)
+                    _instructionModel.AntMargin = result;
+                    if (_instructionModel.IsAntMarginValid && result == _instructionModel.AntMargin)
                     {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricMargin)?.PostMargin;
-                }
-                else
-                {
-                    return "";
-                }
-            }
-            set
-            {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
-                {
-                    if (isMarginValueValid(value))
-                    {
-                        (_instruction as AsymmetricMargin).PostMargin = value;
+                        ClearErrors(nameof(AntMargin));
+                        error = false;
                         isModified = true;
                     }
                 }
+                if (error)
+                {
+                    AddError(nameof(AntMargin), $"Invalid ant margin value for generated structure {_parentGeneratedStructure.StructureId}");
+                }
+                RaisePropertyChangedEvent(nameof(AntMarginBackgroundColor));
             }
         }
+        private string _postMargin;
+        public string PostMargin
+        {
+            get
+            {
+                return _postMargin;
+            }
+            set
+            {
+                _postMargin = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
+                {
+                    _instructionModel.PostMargin = result;
+                    if (_instructionModel.IsPostMarginValid && result == _instructionModel.PostMargin)
+                    {
+                        ClearErrors(nameof(PostMargin));
+                        error = false;
+                        isModified = true;
+                    }
+                }
+                if (error)
+                {
+                    AddError(nameof(PostMargin), $"Invalid posterior margin value for generated structure {_parentGeneratedStructure.StructureId}");
+                }
+                RaisePropertyChangedEvent(nameof(PostMarginBackgroundColor));
+            }
+        }
+        private string _supMargin;
         public string SupMargin
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
-                {
-                    if ((_instruction as AsymmetricMargin)?.SupMargin == null)
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricMargin)?.SupMargin;
-                }
-                else
-                {
-                    return "";
-                }
+                return _supMargin;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
+                _supMargin = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.SupMargin = result;
+                    if (_instructionModel.IsSupMarginValid && result == _instructionModel.SupMargin)
                     {
-                        (_instruction as AsymmetricMargin).SupMargin = value;
+                        ClearErrors(nameof(SupMargin));
+                        error = false;
                         isModified = true;
                     }
                 }
+                if (error)
+                {
+                    AddError(nameof(SupMargin), $"Invalid superior margin value for generated structure {_parentGeneratedStructure.StructureId}");
+                }
+                RaisePropertyChangedEvent(nameof(SupMarginBackgroundColor));
             }
         }
+        private string _infMargin;
         public string InfMargin
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
-                {
-                    if ((_instruction as AsymmetricMargin)?.InfMargin == null)
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricMargin)?.InfMargin;
-                }
-                else
-                {
-                    return "";
-                }
+                return _infMargin;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
+                _infMargin = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.InfMargin = result;
+                    if (_instructionModel.IsInfMarginValid && result == _instructionModel.InfMargin)
                     {
-                        (_instruction as AsymmetricMargin).InfMargin = value;
+                        ClearErrors(nameof(InfMargin));
+                        error = false;
                         isModified = true;
                     }
                 }
+                if (error)
+                {
+                    AddError(nameof(InfMargin), $"Invalid inferior margin value for generated structure {_parentGeneratedStructure.StructureId}");
+                }
+                RaisePropertyChangedEvent(nameof(InfMarginBackgroundColor));
             }
         }
+        private string _leftMargin;
         public string LeftMargin
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
-                {
-                    if ((_instruction as AsymmetricMargin)?.LeftMargin == null)
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricMargin)?.LeftMargin;
-                }
-                else
-                {
-                    return "";
-                }
+                return _leftMargin;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
+                _leftMargin = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.LeftMargin = result;
+                    if (_instructionModel.IsLeftMarginValid && result == _instructionModel.LeftMargin)
                     {
-                        (_instruction as AsymmetricMargin).LeftMargin = value;
+                        ClearErrors(nameof(LeftMargin));
+                        error = false;
                         isModified = true;
                     }
                 }
+                if (error)
+                {
+                    AddError(nameof(LeftMargin), $"Invalid left margin value for generated structure {_parentGeneratedStructure.StructureId}");
+                }
+                RaisePropertyChangedEvent(nameof(LeftMarginBackgroundColor));
             }
         }
+        private string _rightMargin;
         public string RightMargin
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
-                {
-                    if ((_instruction as AsymmetricMargin)?.RightMargin == null)
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricMargin)?.RightMargin;
-                }
-                else
-                {
-                    return "";
-                }
+                return _rightMargin;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricMargin)
+                _rightMargin = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    ClearErrors(nameof(RightMargin));
-                    if (isMarginValueValid(value))
+                    _instructionModel.RightMargin = result;
+                    if (_instructionModel.IsRightMarginValid && result == _instructionModel.RightMargin)
                     {
-                        (_instruction as AsymmetricMargin).RightMargin = value;
+                        ClearErrors(nameof(RightMargin));
+                        error = false;
                         isModified = true;
                     }
                 }
+                if (error)
+                {
+                    AddError(nameof(RightMargin), $"Invalid right margin value for generated structure {_parentGeneratedStructure.StructureId}");
+                }
+                RaisePropertyChangedEvent(nameof(RightMarginBackgroundColor));
             }
         }
 
-        private bool isMarginValueValid(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return true;
-            }
-            if (int.TryParse(value, out int result))
-            {
-                if (result < 0 || result > 50)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                return false;
-            }
-        }
 
+        private string _isoMargin;
         public string IsoMargin
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.margin)
-                {
-                    return (_instruction as Margin)?.IsotropicMargin;
-                }
-                else
-                {
-                    return "";
-                }
+                return _isoMargin;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.margin)
+                _isoMargin = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.IsoMargin = result;
+                    if (_instructionModel.IsIsoMarginValid && result == _instructionModel.IsoMargin)
                     {
-                        (_instruction as Margin).IsotropicMargin = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(IsoMargin));
                     }
                 }
+                if (error)
+                    AddError(nameof(IsoMargin), $"Invalid margin value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(IsoMarginBackgroundColor));
             }
+
         }
 
-        public MarginTypes SelectedMargin
+        private string _supBound;
+        public string SupBound
         {
             get
             {
-                if (_instruction is Margin)
-                {
-                    var val = (_instruction as Margin).MarginType;
-                    return val;
-                }
-                else if (_instruction is AsymmetricMargin)
-                {
-                    var val = (_instruction as AsymmetricMargin).MarginType;
-                    return val;
-                }
-                else
-                {
-                    return MarginTypes.Outer;
-                }
+                return _supBound;
             }
             set
             {
-                if (_instruction is Margin)
+                _supBound = value;
+                bool error = true;
+                if (double.TryParse(value, out double result))
                 {
-                    (_instruction as Margin).MarginType = value;
+                    _instructionModel.SupBound = result;
+                    if (_instructionModel.IsSupBoundValid && result == _instructionModel.SupBound)
+                    {
+                        isModified = true;
+                        error = false;
+                        ClearErrors(nameof(SupBound));
+                    }
                 }
-                else if (_instruction is AsymmetricMargin)
+                if (error)
+                    AddError(nameof(SupBound), $"Invalid superior bound value for generated structure {_parentGeneratedStructure.StructureId}");
+                //RaisePropertyChangedEvent(nameof(IsoMarginBackgroundColor));
+            }
+
+        }
+
+        private string _infBound;
+        public string InfBound
+        {
+            get
+            {
+                return _infBound;
+            }
+            set
+            {
+                _infBound = value;
+                bool error = true;
+                if (double.TryParse(value, out double result))
                 {
-                    (_instruction as AsymmetricMargin).MarginType = value;
+                    _instructionModel.InfBound = result;
+                    if (_instructionModel.IsInfBoundValid && result == _instructionModel.InfBound)
+                    {
+                        isModified = true;
+                        error = false;
+                        ClearErrors(nameof(InfBound));
+                    }
                 }
+                if (error)
+                    AddError(nameof(InfBound), $"Invalid inferior bound value for generated structure {_parentGeneratedStructure.StructureId}");
+                //RaisePropertyChangedEvent(nameof(IsoMarginBackgroundColor));
+            }
+
+        }
+
+        public MarginTypes? SelectedMargin
+        {
+            get
+            {
+                return _instructionModel.MarginType;
+            }
+            set
+            {
+                _instructionModel.MarginType = value;
                 isModified = true;
             }
         }
@@ -386,7 +464,7 @@ namespace OptiMate.ViewModels
         {
             get
             {
-                int index = _model.GetInstructionNumber(_parentGeneratedStructure.StructureId, _instruction);
+                int index = _parentGeneratedStructure.GetInstructionNumber(_instructionModel);
                 if (index == 0)
                 {
                     return Visibility.Collapsed;
@@ -412,32 +490,18 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public bool InternalCrop
+        public bool? InternalCrop
         {
             get
             {
-                switch (SelectedOperator)
-                {
-                    case OperatorTypes.crop:
-                        return (_instruction as Crop).InternalCrop; 
-                    case OperatorTypes.asymmetricCrop:
-                        return (_instruction as AsymmetricCrop).InternalCrop;
-                    default:
-                        return false;
-                }
+                return _instructionModel.InternalCrop;
             }
             set
             {
-                switch (SelectedOperator)
+                if (value != _instructionModel.InternalCrop)
                 {
-                    case OperatorTypes.crop:
-                        (_instruction as Crop).InternalCrop = value;
-                        isModified = true;
-                        break;
-                    case OperatorTypes.asymmetricCrop:
-                        (_instruction as AsymmetricCrop).InternalCrop = value;
-                        isModified = true;
-                        break;
+                    _instructionModel.InternalCrop = value;
+                    isModified = true;
                 }
             }
         }
@@ -456,198 +520,194 @@ namespace OptiMate.ViewModels
                 _ea.GetEvent<DataValidationRequiredEvent>().Publish();
             }
         }
+        private string _isoCropOffset;
         public string IsoCropOffset
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.crop)
-                {
-                    if (string.IsNullOrEmpty((_instruction as Crop).IsotropicOffset))
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as Crop).IsotropicOffset;
-                }
-                else return "";
+                return _isoCropOffset;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.crop)
+                _isoCropOffset = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.IsoCropOffset = result;
+                    if (_instructionModel.IsIsoCropOffsetValid && result == _instructionModel.IsoCropOffset)
                     {
-                        (_instruction as Crop).IsotropicOffset = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(IsoCropOffset));
                     }
                 }
+                if (error)
+                    AddError(nameof(IsoCropOffset), $"Invalid iso crop offset value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(IsoCropOffsetBackgroundColor));
             }
         }
 
+        private string _leftCropOffset;
         public string LeftCropOffset
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
-                {
-                    if (string.IsNullOrEmpty((_instruction as AsymmetricCrop).LeftOffset))
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricCrop).LeftOffset;
-                }
-                else return "";
+                return _leftCropOffset;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
+                _leftCropOffset = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.LeftCropOffset = result;
+                    if (_instructionModel.IsLeftCropOffsetValid && result == _instructionModel.LeftCropOffset)
                     {
-                        (_instruction as AsymmetricCrop).LeftOffset = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(LeftCropOffset));
                     }
                 }
+                if (error)
+                    AddError(nameof(LeftCropOffset), $"Invalid left crop offset value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(LeftCropOffsetBackgroundColor));
             }
         }
+        private string _rightCropOffset;
         public string RightCropOffset
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
-                {
-                    if (string.IsNullOrEmpty((_instruction as AsymmetricCrop).RightOffset))
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricCrop).RightOffset;
-                }
-                else return "";
+                return _rightCropOffset;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
+                _rightCropOffset = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.RightCropOffset = result;
+                    if (_instructionModel.IsRightCropOffsetValid && result == _instructionModel.RightCropOffset)
                     {
-                        (_instruction as AsymmetricCrop).RightOffset = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(RightCropOffset));
                     }
                 }
+                if (error)
+                    AddError(nameof(RightCropOffset), $"Invalid right crop offset value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(RightCropOffsetBackgroundColor));
             }
         }
+
+        private string _antCropOffset;
 
         public string AntCropOffset
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
-                {
-                    if (string.IsNullOrEmpty((_instruction as AsymmetricCrop).AntOffset))
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricCrop).AntOffset;
-                }
-                else return "";
+                return _antCropOffset;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
+                _antCropOffset = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.AntCropOffset = result;
+                    if (_instructionModel.IsAntCropOffsetValid && result == _instructionModel.AntCropOffset)
                     {
-                        (_instruction as AsymmetricCrop).AntOffset = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(AntCropOffset));
                     }
                 }
+                if (error)
+                    AddError(nameof(AntCropOffset), $"Invalid anterior crop offset value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(AntCropOffsetBackgroundColor));
             }
+
         }
 
+        private string _postCropOffset;
         public string PostCropOffset
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
-                {
-                    if (string.IsNullOrEmpty((_instruction as AsymmetricCrop).PostOffset))
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricCrop).PostOffset;
-                }
-                else return "";
+                return _postCropOffset;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
+                _postCropOffset = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.PostCropOffset = result;
+                    if (_instructionModel.IsPostCropOffsetValid && result == _instructionModel.PostCropOffset)
                     {
-                        (_instruction as AsymmetricCrop).PostOffset = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(PostCropOffset));
                     }
                 }
+                if (error)
+                    AddError(nameof(PostCropOffset), $"Invalid posterior crop offset value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(PostCropOffsetBackgroundColor));
             }
         }
 
+        private string _infCropOffset;
         public string InfCropOffset
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
-                {
-                    if (string.IsNullOrEmpty((_instruction as AsymmetricCrop).InfOffset))
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricCrop).InfOffset;
-                }
-                else return "";
+                return _infCropOffset;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
+                _infCropOffset = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.InfCropOffset = result;
+                    if (_instructionModel.IsInfCropOffsetValid && result == _instructionModel.InfCropOffset)
                     {
-                        (_instruction as AsymmetricCrop).InfOffset = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(InfCropOffset));
                     }
                 }
+                if (error)
+                    AddError(nameof(InfCropOffset), $"Invalid inferior crop offset value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(InfCropOffsetBackgroundColor));
             }
         }
 
+        // apply this change to supcropoffset
+        private string _supCropOffset;
         public string SupCropOffset
         {
             get
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
-                {
-                    if (string.IsNullOrEmpty((_instruction as AsymmetricCrop).SupOffset))
-                    {
-                        return "0";
-                    }
-                    else
-                        return (_instruction as AsymmetricCrop).SupOffset;
-                }
-                else return "";
+                return _supCropOffset;
             }
             set
             {
-                if (SelectedOperator == OperatorTypes.asymmetricCrop)
+                _supCropOffset = value;
+                bool error = true;
+                if (ushort.TryParse(value, out ushort result))
                 {
-                    if (isMarginValueValid(value))
+                    _instructionModel.SupCropOffset = result;
+                    if (_instructionModel.IsSupCropOffsetValid && result == _instructionModel.SupCropOffset)
                     {
-                        (_instruction as AsymmetricCrop).SupOffset = value;
                         isModified = true;
+                        error = false;
+                        ClearErrors(nameof(SupCropOffset));
                     }
                 }
+                if (error)
+                    AddError(nameof(SupCropOffset), $"Invalid superior crop offset value for generated structure {_parentGeneratedStructure.StructureId}");
+                RaisePropertyChangedEvent(nameof(SupCropOffsetBackgroundColor));
             }
         }
 
@@ -665,7 +725,15 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public string DefaultTemplateStructureId { get; private set; }
+        public string DefaultTemplateStructureId
+        {
+            get { return _instructionModel.DefaultInstructionTargetId; }
+            set
+            {
+                _instructionModel.DefaultInstructionTargetId = value;
+                isModified = true;
+            }
+        }
 
         public Visibility WarningVisibility_TargetChanged
         {
@@ -696,6 +764,10 @@ namespace OptiMate.ViewModels
                         return Visibility.Hidden;
                     case OperatorTypes.convertDose:
                         return Visibility.Hidden;
+                    case OperatorTypes.partition:
+                        return Visibility.Hidden;
+                    case OperatorTypes.setHU:
+                        return Visibility.Hidden;
                     default:
                         return Visibility.Visible;
                 }
@@ -717,53 +789,225 @@ namespace OptiMate.ViewModels
             }
         }
 
+        public SolidColorBrush IsoMarginBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(IsoMargin)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush IsoCropOffsetBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(IsoCropOffset)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush LeftCropOffsetBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(LeftCropOffset)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush RightCropOffsetBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(RightCropOffset)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush AntCropOffsetBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(AntCropOffset)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush PostCropOffsetBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(PostCropOffset)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush SupCropOffsetBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(SupCropOffset)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush InfCropOffsetBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(InfCropOffset)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush LeftMarginBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(LeftMargin)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush RightMarginBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(RightMargin)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush AntMarginBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(AntMargin)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush PostMarginBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(PostMargin)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush SupMarginBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(SupMargin)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
+        public SolidColorBrush InfMarginBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(InfMargin)))
+                {
+                    return new SolidColorBrush(Colors.DarkOrange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                }
+            }
+        }
+
         public string TargetTemplateStructureId
         {
             get
             {
-                switch (_instruction)
-                {
-                    case Crop crop:
-                        return crop.TemplateStructureId;
-                    case AsymmetricCrop crop:
-                        return crop.TemplateStructureId;
-                    case And and:
-                        return and.TemplateStructureId;
-                    case Or or:
-                        return or.TemplateStructureId;
-                    case Sub sub:
-                        return sub.TemplateStructureId;
-                    case SubFrom subFrom:
-                        return subFrom.TemplateStructureId;
-                    default:
-                        return "";
-                }
+                return _instructionModel.InstructionTargetId;
             }
             set
             {
-                switch (_instruction)
-                {
-                    case Crop crop:
-                        crop.TemplateStructureId = value;
-                        break;
-                    case AsymmetricCrop crop:
-                        crop.TemplateStructureId = value;
-                        break;
-                    case And and:
-                        and.TemplateStructureId = value;
-                        break;
-                    case Or or:
-                        or.TemplateStructureId = value;
-                        break;
-                    case Sub sub:
-                        sub.TemplateStructureId = value;
-                        break;
-                    case SubFrom subFrom:
-                        subFrom.TemplateStructureId = value;
-                        break;
-                    default:
-                        return;
-                }
+                _instructionModel.InstructionTargetId = value;
                 ValidateTargetTemplateStructureId();
             }
         }
@@ -771,7 +1015,7 @@ namespace OptiMate.ViewModels
         private void ValidateTargetTemplateStructureId()
         {
             ClearErrors(nameof(TargetTemplateStructureId));
-            if (instructionHasTarget())
+            if (_instructionModel.InstructionHasTarget())
             {
                 if (!string.Equals(DefaultTemplateStructureId, TargetTemplateStructureId, StringComparison.OrdinalIgnoreCase))
                     isModified = true;
@@ -779,7 +1023,7 @@ namespace OptiMate.ViewModels
                     isModified = false;
                 if (string.IsNullOrEmpty(TargetTemplateStructureId))
                 {
-                    int instructionNumber = _model.GetInstructionNumber(_parentGeneratedStructure.StructureId, _instruction);
+                    int instructionNumber = _parentGeneratedStructure.GetInstructionNumber(_instructionModel);
                     AddError(nameof(TargetTemplateStructureId), $"{_parentGeneratedStructure.StructureId} operator #{instructionNumber + 1} has an invalid target of operation.");
                 }
             }
@@ -830,76 +1074,23 @@ namespace OptiMate.ViewModels
             }
         }
 
-        private bool instructionHasTarget()
-        {
-            switch (SelectedOperator)
-            {
-                case OperatorTypes.or:
-                    return true;
-                case OperatorTypes.and:
-                    return true;
-                case OperatorTypes.sub:
-                    return true;
-                case OperatorTypes.subfrom:
-                    return true;
-                case OperatorTypes.convertDose:
-                    return false;
-                case OperatorTypes.crop:
-                    return true;
-                case OperatorTypes.margin:
-                    return false;
-                case OperatorTypes.convertResolution:
-                    return false;
-                case OperatorTypes.asymmetricMargin:
-                    return false;
-                default:
-                    return false;
-            }
-        }
+
 
         public ObservableCollection<string> TargetTemplateIds
         {
             get
             {
-                var ids = new ObservableCollection<string>(_model.GetAvailableTemplateTargetIds(_parentGeneratedStructure.StructureId));
+                var structureMappings = _instructionModel.GetAvailableTargetIds();
+                var ids = new ObservableCollection<string>(structureMappings.Select(x => x.TemplateStructureId));
                 return ids;
             }
         }
 
-        //public Visibility TargetTemplateStructureVisibility
-        //{
-        //    get
-        //    {
-        //        switch (SelectedOperator)
-        //        {
-        //            case OperatorTypes.or:
-        //                return Visibility.Visible;
-        //            case OperatorTypes.and:
-        //                return Visibility.Visible;
-        //            case OperatorTypes.sub:
-        //                return Visibility.Visible;
-        //            case OperatorTypes.subfrom:
-        //                return Visibility.Visible;
-        //            case OperatorTypes.convertDose:
-        //                return Visibility.Collapsed;
-        //            case OperatorTypes.crop:
-        //                return Visibility.Visible;
-        //            case OperatorTypes.margin:
-        //                return Visibility.Collapsed;
-        //            case OperatorTypes.convertResolution:
-        //                return Visibility.Collapsed;
-        //            default:
-        //                return Visibility.Collapsed;
-        //        }
-        //    }
-        //}
-
         public ObservableCollection<TemplateStructure> TemplateStructures { get; set; } = new ObservableCollection<TemplateStructure>();
-        public InstructionViewModel(Instruction instruction, GeneratedStructure parentStructure, MainModel model, IEventAggregator ea)
+        public InstructionViewModel(IInstructionModel instruction, IGeneratedStructureModel parentStructure, IEventAggregator ea)
         {
-            _instruction = instruction;
+            _instructionModel = instruction;
             _parentGeneratedStructure = parentStructure;
-            _model = model;
             _ea = ea;
             RegisterEvents();
             InitializeViewModel();
@@ -908,80 +1099,80 @@ namespace OptiMate.ViewModels
 
         private void InitializeViewModel()
         {
-            switch (_instruction)
+            switch (_instructionModel.Operator)
             {
-                case Or inst:
-                    TargetTemplateStructureId = inst.TemplateStructureId;
-                    DefaultTemplateStructureId = TargetTemplateStructureId;
+                case OperatorTypes.or:
                     _selectedOperator = OperatorTypes.or;
                     RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
                     break;
-                case And inst:
-                    TargetTemplateStructureId = inst.TemplateStructureId;
-                    DefaultTemplateStructureId = TargetTemplateStructureId;
+                case OperatorTypes.and:
                     _selectedOperator = OperatorTypes.and;
                     RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
                     break;
-                case Sub inst:
-                    TargetTemplateStructureId = inst.TemplateStructureId;
-                    DefaultTemplateStructureId = TargetTemplateStructureId;
+                case OperatorTypes.sub:
                     _selectedOperator = OperatorTypes.sub;
                     RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
                     break;
-                case SubFrom inst:
-                    TargetTemplateStructureId = inst.TemplateStructureId;
-                    DefaultTemplateStructureId = TargetTemplateStructureId;
+                case OperatorTypes.subfrom:
                     _selectedOperator = OperatorTypes.subfrom;
                     RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
                     break;
-                case Margin _:
+                case OperatorTypes.margin:
                     _selectedOperator = OperatorTypes.margin;
+                    IsoMargin = _instructionModel.IsoMargin.ToString();
+                    RaisePropertyChangedEvent(nameof(SelectedMargin));
                     RaisePropertyChangedEvent(nameof(IsoMargin));
                     break;
-                case AsymmetricMargin _:
+                case OperatorTypes.asymmetricMargin:
                     _selectedOperator = OperatorTypes.asymmetricMargin;
-                    RaisePropertyChangedEvent(nameof(RightMargin));
-                    RaisePropertyChangedEvent(nameof(LeftMargin));
-                    RaisePropertyChangedEvent(nameof(PostMargin));
-                    RaisePropertyChangedEvent(nameof(AntMargin));
-                    RaisePropertyChangedEvent(nameof(SupMargin));
-                    RaisePropertyChangedEvent(nameof(InfMargin));
                     RaisePropertyChangedEvent(nameof(SelectedMargin));
+                    RightMargin = _instructionModel.RightMargin.ToString();
+                    LeftMargin = _instructionModel.LeftMargin.ToString();
+                    PostMargin = _instructionModel.PostMargin.ToString();
+                    AntMargin = _instructionModel.AntMargin.ToString();
+                    SupMargin = _instructionModel.SupMargin.ToString();
+                    InfMargin = _instructionModel.InfMargin.ToString();
                     break;
-                case ConvertDose _:
+                case OperatorTypes.convertDose:
                     _selectedOperator = OperatorTypes.convertDose;
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    DoseLevel = _instructionModel.DoseLevel.ToString();
                     break;
-                case ConvertResolution _:
+                case OperatorTypes.convertResolution:
                     _selectedOperator = OperatorTypes.convertResolution;
                     RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
                     break;
-                case Crop inst:
-                    TargetTemplateStructureId = inst.TemplateStructureId;
-                    DefaultTemplateStructureId = TargetTemplateStructureId;
+                case OperatorTypes.crop:
                     _selectedOperator = OperatorTypes.crop;
+                    IsoCropOffset = _instructionModel.IsoCropOffset.ToString();
                     RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
-                    RaisePropertyChangedEvent(nameof(IsoCropOffset));
                     RaisePropertyChangedEvent(nameof(InternalCrop));
                     break;
-                case AsymmetricCrop inst:
-                    TargetTemplateStructureId = inst.TemplateStructureId;
-                    DefaultTemplateStructureId = TargetTemplateStructureId;
+                case OperatorTypes.asymmetricCrop:
                     _selectedOperator = OperatorTypes.asymmetricCrop;
+                    RightCropOffset = _instructionModel.RightCropOffset.ToString();
+                    LeftCropOffset = _instructionModel.LeftCropOffset.ToString();
+                    PostCropOffset = _instructionModel.PostCropOffset.ToString();
+                    AntCropOffset = _instructionModel.AntCropOffset.ToString();
+                    SupCropOffset = _instructionModel.SupCropOffset.ToString();
+                    InfCropOffset = _instructionModel.InfCropOffset.ToString();
                     RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
-                    RaisePropertyChangedEvent(nameof(RightCropOffset));
-                    RaisePropertyChangedEvent(nameof(LeftCropOffset));
-                    RaisePropertyChangedEvent(nameof(PostCropOffset));
-                    RaisePropertyChangedEvent(nameof(AntCropOffset));
-                    RaisePropertyChangedEvent(nameof(SupCropOffset));
-                    RaisePropertyChangedEvent(nameof(InfCropOffset));
                     RaisePropertyChangedEvent(nameof(InternalCrop));
+                    break;
+                case OperatorTypes.partition:
+                    _selectedOperator = OperatorTypes.partition;
+                    SupBound = _instructionModel.SupBound.ToString();
+                    InfBound = _instructionModel.InfBound.ToString();
+                    break;
+                case OperatorTypes.setHU:
+                    _selectedOperator = OperatorTypes.setHU;
+                    HUValue = _instructionModel.HUValue.ToString();
                     break;
                 default:
                     _selectedOperator = OperatorTypes.undefined;
                     break;
 
             }
+            isModified = false;
             ValidateTargetTemplateStructureId();
         }
 
@@ -989,24 +1180,33 @@ namespace OptiMate.ViewModels
         {
             // Design use only
             TargetTemplateStructureId = "DesignId";
-            _instruction = new Or { TemplateStructureId = TargetTemplateStructureId };
+            _instructionModel = new InstructionModelTest();
         }
 
         public void RegisterEvents()
         {
             _ea.GetEvent<NewTemplateStructureEvent>().Subscribe(OnNewTemplateStructureEvent);
+            _ea.GetEvent<RemovedInstructionEvent>().Subscribe(OnRemovedInstruction);
             _ea.GetEvent<TemplateStructureIdChangedEvent>().Subscribe(OnTemplateStructureIdChanged);
             _ea.GetEvent<RemovedTemplateStructureEvent>().Subscribe(RemoveTemplateStructureFromList);
             _ea.GetEvent<RemovedGeneratedStructureEvent>().Subscribe(RemoveGeneratedStructureFromList);
-            _ea.GetEvent<RemovedInstructionEvent>().Subscribe(RemoveInstructionViewModel);
             _ea.GetEvent<GeneratedStructureIdChangedEvent>().Subscribe(OnGeneratedStructureIdChanged);
             _ea.GetEvent<GeneratedStructureOrderChangedEvent>().Subscribe(OnGeneratedStructureOrderChanged);
             ErrorsChanged += (sender, args) => { _ea.GetEvent<DataValidationRequiredEvent>().Publish(); };
         }
 
+        private void OnRemovedInstruction(InstructionRemovedEventInfo info)
+        {
+            if (_instructionModel == info.RemovedInstruction)
+                _ea.GetEvent<RemovingInstructionViewModelEvent>().Publish(this);
+        }
+
         private void RemoveGeneratedStructureFromList(RemovedGeneratedStructureEventInfo info)
         {
-            RaisePropertyChangedEvent(nameof(TargetTemplateIds));
+            if (_parentGeneratedStructure.StructureId != info.RemovedStructureId)
+            {
+                RaisePropertyChangedEvent(nameof(TargetTemplateIds));
+            }
         }
 
         private void OnGeneratedStructureOrderChanged()
@@ -1023,6 +1223,21 @@ namespace OptiMate.ViewModels
                 RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
             }
             RaisePropertyChangedEvent(nameof(TargetTemplateIds));
+            // Update error messaging
+            foreach (var errorProperty in PropertiesWithErrrors())
+            {
+                if (HasError(errorProperty))
+                {
+                    var propInfo = GetType().GetProperty(errorProperty);
+                    if (propInfo != null)
+                    {
+                        var value = propInfo.GetValue(this);
+                        propInfo.SetValue(this, null);
+                        propInfo.SetValue(this, value); // need to change due to FODY
+                    }
+                }
+            }
+            
         }
 
         private void OnNewTemplateStructureEvent(NewTemplateStructureEventInfo info)
@@ -1030,16 +1245,14 @@ namespace OptiMate.ViewModels
             RaisePropertyChangedEvent(nameof(TargetTemplateIds));
         }
 
-        private void RemoveInstructionViewModel(InstructionRemovedEventInfo info)
-        {
-            if (_instruction == info.RemovedInstruction)
-                _ea.GetEvent<RemovingInstructionViewModelEvent>().Publish(this);
-            
-        }
 
         private void RemoveTemplateStructureFromList(RemovedTemplateStructureEventInfo info)
         {
-            RaisePropertyChangedEvent(nameof(TargetTemplateIds));
+            if (info.RemovedTemplateStructureId != TargetTemplateStructureId)
+            {
+                // Leave this property unchanged if it's the one being removed, so it can be found and cleaned up.
+                RaisePropertyChangedEvent(nameof(TargetTemplateIds));
+            }
         }
 
         private void OnTemplateStructureIdChanged(TemplateStructureIdChangedEventInfo info)
@@ -1052,11 +1265,22 @@ namespace OptiMate.ViewModels
                 RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
             }
         }
-       
-        internal void RemoveInstruction()
+
+
+        public ICommand RemoveInstructionCommand
         {
-            _model.RemoveInstruction(_parentGeneratedStructure.StructureId, _instruction);
+            get
+            {
+                return new DelegateCommand(RemoveInstruction);
+            }
         }
+        private void RemoveInstruction(object param = null)
+        {
+            _instructionModel.Remove();
+            _ea.GetEvent<RemovingInstructionViewModelEvent>().Publish(this);
+        }
+
+
     }
 
 }
