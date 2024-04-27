@@ -249,11 +249,7 @@ namespace OptiMate.Models
                         foreach (VVector[] C in contours)
                         {
                             var area = GetArea(C);
-                            if (Math.Abs(C.Average(x => x.z) + 2.5) < 0.01)
-                            {
-                                string debugme = "hi";
-                            }
-                            if (area < 40)
+                            if (area < 5)
                             {
                                 //Estimate normal
                                 var centroid = new VVector(C.Average(x => x.x), C.Average(x => x.y), C.Average(x => x.z));
@@ -286,11 +282,13 @@ namespace OptiMate.Models
         {
             double Area = 0;
             int c = 0;
-            for (c = 0; c < V.Count() - 2; c++)
+            for (c = 0; c <= V.Count() - 2; c++)
             {
-                Area = Area + Math.Abs(V[c].x * V[c + 1].y - V[c].y * V[c + 1].x);
+                var residualArea1 = (V[c].x * V[c + 1].y) - (V[c].y * V[c + 1].x);
+                Area = Area + residualArea1;
             }
-            Area = Area + Math.Abs(V[c + 1].x * V[0].y - V[c + 1].y * V[0].x);
+            var residualArea2 = V[c].x * V[0].y -V[c].y * V[0].x;
+            Area = Area + residualArea2;
             return Math.Abs(Area) / 2;
 
         }
@@ -298,7 +296,6 @@ namespace OptiMate.Models
         public async Task<SmallVolumeResults> CheckSmallVolumes()
         {
             var NumDetectedParts = await GetNumDistinctMeshes();
-            var VarianReportedMinParts = await GetVMSMinParts();
             var minAreaResult = await GetMinArea();
             if (NumDetectedParts.Success == false)
             {
@@ -307,7 +304,7 @@ namespace OptiMate.Models
                     Success = false,
                 };
             }
-            if (VarianReportedMinParts > NumDetectedParts.NumMeshes && minAreaResult.Success)
+            if (minAreaResult.Success && minAreaResult.HasSmallAreas)
             {
                 return new SmallVolumeResults()
                 {
@@ -316,13 +313,12 @@ namespace OptiMate.Models
                     SmallVolumesLocation = minAreaResult.SmallAreas.Select(x => x.Item2).ToList()
                 };
             }
-            else if (minAreaResult.HasSmallAreas)
+            else if (minAreaResult.Success)
             {
                 return new SmallVolumeResults()
                 {
                     Success = true,
-                    HasSmallVolumes = true,
-                    SmallVolumesLocation = minAreaResult.SmallAreas.Select(x => x.Item2).ToList()
+                    HasSmallVolumes = false
                 };
             }
             return new SmallVolumeResults()

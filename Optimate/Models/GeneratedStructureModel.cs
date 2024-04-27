@@ -652,7 +652,6 @@ namespace OptiMate.Models
                     {
                         generatedEclipseStructure.SetAssignedHU(setHUinstruction.HU);
                         SeriLogModel.AddLog($"HU for {_genStructure.StructureId} set to {setHUinstruction.HU}");
-                        
                     }
                     else
                     {
