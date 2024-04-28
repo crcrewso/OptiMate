@@ -54,11 +54,8 @@ namespace OptiMate.ViewModels
             }
             set
             {
-                if (_templateModel.IsNewTemplateStructureIdValid(value))
-                {
-                    _templateModel.RenameTemplateStructure(_templateStructureModel.TemplateStructureId, value);
-                    RaisePropertyChangedEvent(nameof(StructureIdColor));
-                }
+                _templateStructureModel.TemplateStructureId = value;
+                RaisePropertyChangedEvent(nameof(StructureIdColor));
             }
         }
 

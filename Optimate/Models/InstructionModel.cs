@@ -3,6 +3,7 @@ using OptiMate.ViewModels;
 using Prism.Events;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace OptiMate.Models
         bool IsDoseLevelValid { get; }
         int Index { get; set; }
         ushort? InfMargin { get; set; }
-        string InstructionTargetId { get; set; }
+        InstructionTargetModel InstructionTarget { get; set; }
         bool IsAntMarginValid { get; }
         bool IsInfMarginValid { get; }
         bool isInstructionTargetIdValid { get; }
@@ -33,7 +34,7 @@ namespace OptiMate.Models
         ushort? PostMargin { get; set; }
         ushort? RightMargin { get; set; }
         ushort? SupMargin { get; set; }
-        List<StructureMappingModel> GetAvailableTargetIds();
+        List<InstructionTargetModel> GetAvailableTargets();
         InstructionModel ReplaceInstruction(OperatorTypes value);
         void Remove();
         ushort? IsoCropOffset { get; set; }
@@ -764,7 +765,7 @@ namespace OptiMate.Models
             }
         }
         public bool IsSupBoundValid { get; private set; }
-        
+
         public double? InfBound
         {
 
@@ -809,38 +810,47 @@ namespace OptiMate.Models
             _targetsModel = targetsModel;
             _generatedStructure = genStructure;
             _ea = ea;
-            SetOperatorType();
+            InitializeOperator();
             RegisterEvents();
             SeriLogModel.AddLog($"Created new instruction {Operator} for structure {_generatedStructure.StructureId} [Guid: {InstructionId}]");
         }
 
-        public List<StructureMappingModel> GetAvailableTargetIds()
+        public List<InstructionTargetModel> GetAvailableTargets()
         {
-            return _targetsModel.GetAugmentedTemplateStructures(_generatedStructure.StructureId);
+            return _targetsModel.GetInstructionTargets(_generatedStructure.StructureId);
+        }
+        private InstructionTargetModel GetInstructionTarget(string targetId)
+        {
+            var targetModel = GetAvailableTargets().FirstOrDefault(x => x.TargetStructureId == targetId);
+            return targetModel;
         }
 
-        private void SetOperatorType()
+        private void InitializeOperator()
         {
             switch (_instruction)
             {
                 case And inst:
                     Operator = OperatorTypes.and;
-                    DefaultInstructionTargetId = inst.TemplateStructureId;
+                    InstructionTarget = GetInstructionTarget(inst.TargetStructureId);
+                    DefaultInstructionTargetId = inst.TargetStructureId;
                     break;
                 case Or inst:
                     Operator = OperatorTypes.or;
-                    DefaultInstructionTargetId = inst.TemplateStructureId;
+                    InstructionTarget = GetInstructionTarget(inst.TargetStructureId);
+                    DefaultInstructionTargetId = inst.TargetStructureId;
                     break;
                 case AsymmetricMargin _:
                     Operator = OperatorTypes.asymmetricMargin;
                     break;
                 case Sub inst:
                     Operator = OperatorTypes.sub;
-                    DefaultInstructionTargetId = inst.TemplateStructureId;
+                    InstructionTarget = GetInstructionTarget(inst.TargetStructureId);
+                    DefaultInstructionTargetId = inst.TargetStructureId;
                     break;
                 case Crop inst:
                     Operator = OperatorTypes.crop;
-                    DefaultInstructionTargetId = inst.TemplateStructureId;
+                    InstructionTarget = GetInstructionTarget(inst.TargetStructureId);
+                    DefaultInstructionTargetId = inst.TargetStructureId;
                     break;
                 case Margin _:
                     Operator = OperatorTypes.margin;
@@ -850,14 +860,16 @@ namespace OptiMate.Models
                     break;
                 case SubFrom inst:
                     Operator = OperatorTypes.subfrom;
-                    DefaultInstructionTargetId = inst.TemplateStructureId;
+                    InstructionTarget = GetInstructionTarget(inst.TargetStructureId);
+                    DefaultInstructionTargetId = inst.TargetStructureId;
                     break;
                 case ConvertResolution _:
                     Operator = OperatorTypes.convertResolution;
                     break;
                 case AsymmetricCrop inst:
                     Operator = OperatorTypes.asymmetricCrop;
-                    DefaultInstructionTargetId = inst.TemplateStructureId;
+                    InstructionTarget = GetInstructionTarget(inst.TargetStructureId);
+                    DefaultInstructionTargetId = inst.TargetStructureId;
                     break;
                 case Partition _:
                     Operator = OperatorTypes.partition;
@@ -867,7 +879,7 @@ namespace OptiMate.Models
                     break;
                 default:
                     throw new Exception("Unknown instruction type being set");
-                    
+
             }
         }
 
@@ -883,38 +895,38 @@ namespace OptiMate.Models
                 switch (_instruction)
                 {
                     case And inst:
-                        if (inst.TemplateStructureId == info.RemovedTemplateStructureId)
+                        if (inst.TargetStructureId == info.RemovedTemplateStructureId)
                         {
                             _generatedStructure.RemoveInstruction(this);
                         }
                         break;
                     case Or inst:
-                        if (inst.TemplateStructureId == info.RemovedTemplateStructureId)
+                        if (inst.TargetStructureId == info.RemovedTemplateStructureId)
                         {
                             SeriLogModel.AddLog($"Calling RemoveInstruction Or instruction targetting {info.RemovedTemplateStructureId} from {_generatedStructure.StructureId}...");
                             _generatedStructure.RemoveInstruction(this);
                         }
                         break;
                     case Sub inst:
-                        if (inst.TemplateStructureId == info.RemovedTemplateStructureId)
+                        if (inst.TargetStructureId == info.RemovedTemplateStructureId)
                         {
                             _generatedStructure.RemoveInstruction(this);
                         }
                         break;
                     case Crop inst:
-                        if (inst.TemplateStructureId == info.RemovedTemplateStructureId)
+                        if (inst.TargetStructureId == info.RemovedTemplateStructureId)
                         {
                             _generatedStructure.RemoveInstruction(this);
                         }
                         break;
                     case SubFrom inst:
-                        if (inst.TemplateStructureId == info.RemovedTemplateStructureId)
+                        if (inst.TargetStructureId == info.RemovedTemplateStructureId)
                         {
                             _generatedStructure.RemoveInstruction(this);
                         }
                         break;
                     case AsymmetricCrop inst:
-                        if (inst.TemplateStructureId == info.RemovedTemplateStructureId)
+                        if (inst.TargetStructureId == info.RemovedTemplateStructureId)
                         {
                             _generatedStructure.RemoveInstruction(this);
                         }
@@ -975,72 +987,83 @@ namespace OptiMate.Models
         public bool isInstructionTargetIdValid { get; private set; }
 
         public string DefaultInstructionTargetId { get; set; }
-        public string InstructionTargetId
+
+        private InstructionTargetModel _instructionTarget;
+        public InstructionTargetModel InstructionTarget
         {
             get
             {
                 if (InstructionHasTarget())
                 {
-                    switch (_instruction)
-                    {
-                        case And inst:
-                            return inst.TemplateStructureId;
-                        case Or inst:
-                            return inst.TemplateStructureId;
-                        case Sub inst:
-                            return inst.TemplateStructureId;
-                        case Crop inst:
-                            return inst.TemplateStructureId;
-                        case SubFrom inst:
-                            return inst.TemplateStructureId;
-                        case AsymmetricCrop inst:
-                            return inst.TemplateStructureId;
-                        default:
-                            return "";
-                    }
+                    return _instructionTarget;
                 }
-                else return string.Empty;
+                else return null;
             }
             set
             {
                 if (InstructionHasTarget())
                 {
-                    if (string.IsNullOrEmpty(value))
+                    UnregisterEvents(_instructionTarget);
+                    _instructionTarget = value;
+                    if (_instructionTarget != null)
                     {
-                        isInstructionTargetIdValid = false;
+                        UpdateTargetStructureId();
                     }
-                    else
-                    {
-                        isInstructionTargetIdValid = true;
-                    }
-                    switch (_instruction)
-                    {
-                        case And inst:
-                            inst.TemplateStructureId = value;
-                            break;
-                        case Or inst:
-                            inst.TemplateStructureId = value;
-                            break;
-                        case Sub inst:
-                            inst.TemplateStructureId = value;
-                            break;
-                        case Crop inst:
-                            inst.TemplateStructureId = value;
-                            break;
-                        case SubFrom inst:
-                            inst.TemplateStructureId = value;
-                            break;
-                        case AsymmetricCrop inst:
-                            inst.TemplateStructureId = value;
-                            break;
-                        default:
-                            throw new Exception("Attempting to get target from unknown instruction type");
-                    }
+                    RegisterEvents(_instructionTarget);
                 }
             }
         }
 
-        
+        private void RegisterEvents(InstructionTargetModel instructionTarget)
+        {
+            if (instructionTarget != null)
+            {
+                instructionTarget.PropertyChanged += InstructionTarget_PropertyChanged;
+            }
+        }
+
+        private void UpdateTargetStructureId()
+        {
+            switch (_instruction)
+            {
+                case And inst:
+                    inst.TargetStructureId = _instructionTarget.TargetStructureId;
+                    break;
+                case Or inst:
+                    inst.TargetStructureId = _instructionTarget.TargetStructureId;
+                    break;
+                case Sub inst:
+                    inst.TargetStructureId = _instructionTarget.TargetStructureId;
+                    break;
+                case Crop inst:
+                    inst.TargetStructureId = _instructionTarget.TargetStructureId;
+                    break;
+                case SubFrom inst:
+                    inst.TargetStructureId = _instructionTarget.TargetStructureId;
+                    break;
+                case AsymmetricCrop inst:
+                    inst.TargetStructureId = _instructionTarget.TargetStructureId;
+                    break;
+                default:
+                    throw new Exception("Attempting to get target from unknown instruction type");
+            }
+        }
+
+        private void UnregisterEvents(InstructionTargetModel instructionTarget)
+        {
+            if (instructionTarget != null)
+            {
+                instructionTarget.PropertyChanged -= InstructionTarget_PropertyChanged;
+            }
+        }
+
+        private void InstructionTarget_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(InstructionTargetModel.TargetStructureId))
+            {
+                UpdateTargetStructureId();
+            }
+}
     }
 }
 

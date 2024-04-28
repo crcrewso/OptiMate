@@ -62,6 +62,7 @@ namespace OptiMate.Models
     }
 
     public class TemplateSavedEvent : PubSubEvent { }
+    public class AvailableTargetModelUpdated : PubSubEvent { }
 
     public class ReadyForGenStructureCleanupEvent : PubSubEvent { }
     
@@ -69,11 +70,13 @@ namespace OptiMate.Models
     public class GeneratedStructureIdChangedEvent : PubSubEvent<GeneratedStructureIdChangedEventInfo> { }
 
     public class GeneratedStructureCleaningUpEvent : PubSubEvent<string> { }
-    public class GeneratedStructureOrderChangedEvent : PubSubEvent { }
+    public class GeneratedStructureOrderChangedEvent : PubSubEvent<(int,int)> { }
+    public class TemplateStructureOrderChangedEvent : PubSubEvent<(int, int)> { }
     public class RemovedInstructionEvent : PubSubEvent<InstructionRemovedEventInfo> { }
     public class ModelInitializedEvent : PubSubEvent { }
     public class NewTemplateNameSpecified : PubSubEvent<string> { }
     public class AddedInstructionEvent : PubSubEvent<InstructionAddedEventInfo> { }
+    public class InstructionTargetChangedEvent : PubSubEvent<InstructionModel> { }
     public class StructureGeneratedEvent : PubSubEvent<StructureGeneratedEventInfo> { }
     public class StructureGeneratingEvent : PubSubEvent<StructureGeneratingEventInfo> { }
     public class NewTemplateStructureEvent : PubSubEvent<NewTemplateStructureEventInfo> { }

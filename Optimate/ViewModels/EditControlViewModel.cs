@@ -30,7 +30,33 @@ namespace OptiMate.ViewModels
             }
             set
             {
+                _templateStructureId = value;
                 _templateStructureModel.TemplateStructureId = value;
+                if (_templateStructureId != _templateStructureModel.TemplateStructureId)
+                {
+                    AddError(nameof(TemplateStructureId), "Template Structure Id is invalid");
+                }
+                else
+                {
+                    ClearErrors(nameof(TemplateStructureId));
+                }
+                RaisePropertyChangedEvent(nameof(TemplateStructureIdBackgroundColor));
+                RaisePropertyChangedEvent(nameof(InputsValid));
+            }
+        }
+
+        public SolidColorBrush TemplateStructureIdBackgroundColor
+        {
+            get
+            {
+                if (HasError(nameof(TemplateStructureId)))
+                {
+                    return Brushes.DarkOrange;
+                }
+                else
+                {
+                    return Brushes.LightGoldenrodYellow;
+                }
             }
         }
 
@@ -137,5 +163,21 @@ namespace OptiMate.ViewModels
             UserConfirmed = true;
             (obj as Popup).IsOpen = false;
         }
+
+        public bool InputsValid
+        {
+            get
+            {
+                if (HasErrors)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
     }
 }

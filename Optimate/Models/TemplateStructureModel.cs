@@ -1,4 +1,5 @@
 ﻿using OptiMate.Logging;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -75,12 +76,26 @@ namespace OptiMate.Models
 
         private TemplateStructure _templateStructure;
         private Dictionary<string, bool> _eclipseIds;
+        private TemplateModel _templateModel;
         private EsapiWorker _ew;
+        private IEventAggregator _ea;
         public List<string> Aliases { get; set; }
         public string TemplateStructureId
         {
-            get { return _templateStructure.TemplateStructureId; }
-            set { _templateStructure.TemplateStructureId = value; }
+            get
+            {
+                return _templateStructure.TemplateStructureId;
+            }
+            set
+            {
+                if (_templateModel.IsNewTemplateStructureIdValid(value))
+                {
+                    string oldId = _templateStructure.TemplateStructureId;
+                    var eventArgs = new TemplateStructureIdChangedEventInfo() { OldId = oldId, NewId = value };
+                    _templateStructure.TemplateStructureId = value;
+                    _ea.GetEvent<TemplateStructureIdChangedEvent>().Publish(eventArgs);
+                }
+            }
         }
         public string EclipseStructureId
         {
@@ -99,10 +114,12 @@ namespace OptiMate.Models
             }
         }
 
-        public TemplateStructureModel(TemplateStructure templateStructure, Dictionary<string, bool> eclipseIds, EsapiWorker ew)
+        public TemplateStructureModel(TemplateStructure templateStructure, TemplateModel templateModel, Dictionary<string, bool> eclipseIds, EsapiWorker ew, IEventAggregator ea)
         {
             _templateStructure = templateStructure;
+            _templateModel = templateModel;
             _ew = ew;
+            _ea = ea;
             _eclipseIds = eclipseIds;
             if (_templateStructure.Alias != null)
             {
@@ -287,7 +304,7 @@ namespace OptiMate.Models
                 var residualArea1 = (V[c].x * V[c + 1].y) - (V[c].y * V[c + 1].x);
                 Area = Area + residualArea1;
             }
-            var residualArea2 = V[c].x * V[0].y -V[c].y * V[0].x;
+            var residualArea2 = V[c].x * V[0].y - V[c].y * V[0].x;
             Area = Area + residualArea2;
             return Math.Abs(Area) / 2;
 

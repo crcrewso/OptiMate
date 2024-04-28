@@ -15,6 +15,7 @@ namespace OptiMate.Models
         private OptiMateTemplate _template;
         private Dictionary<string, bool> _eclipseIds;
         private IEventAggregator _ea;
+        private AvailableTargetModel _availableTargets;
 
         public TemplateModel(OptiMateTemplate template, EsapiWorker ew, IEventAggregator ea, Dictionary<string, bool> eclipseIds)
         {
@@ -22,11 +23,15 @@ namespace OptiMate.Models
             _template = template;
             _ea = ea;
             _eclipseIds = eclipseIds;
+            _availableTargets = new AvailableTargetModel(_template, _ea);
         }
 
         internal AvailableTargetModel AvailableTargets
         {
-            get { return new AvailableTargetModel(_template); }
+            get
+            {
+                return _availableTargets;
+            }
         }
         internal bool IsEmpty(string eclipseStructureId)
         {
@@ -140,7 +145,7 @@ namespace OptiMate.Models
             var templateList = _template.TemplateStructures.ToList();
             templateList.Add(newTemplateStructure);
             _template.TemplateStructures = templateList.ToArray();
-            var newTemplateStructureModel = new TemplateStructureModel(newTemplateStructure, _eclipseIds, _ew);
+            var newTemplateStructureModel = new TemplateStructureModel(newTemplateStructure, this, _eclipseIds, _ew, _ea);
             _ea.GetEvent<NewTemplateStructureEvent>().Publish(new NewTemplateStructureEventInfo { NewTemplateStructure = newTemplateStructureModel });
             return newTemplateStructureModel;
         }
@@ -155,7 +160,7 @@ namespace OptiMate.Models
             _ea.GetEvent<ReadyForGenStructureCleanupEvent>().Publish();
         }
 
-     
+
 
         internal List<string> GetTemplateStructureAliases(string templateStructureId)
         {
@@ -170,17 +175,7 @@ namespace OptiMate.Models
             }
         }
 
-        internal void RenameTemplateStructure(string templateStructureId, string value)
-        {
-            var ts = _template.TemplateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase));
-            if (ts != null && IsNewTemplateStructureIdValid(value))
-            {
-                var eventArgs = new TemplateStructureIdChangedEventInfo() { OldId = ts.TemplateStructureId, NewId = value };
-                string oldId = ts.TemplateStructureId;
-                ts.TemplateStructureId = value;
-                _ea.GetEvent<TemplateStructureIdChangedEvent>().Publish(eventArgs);
-            }
-        }
+
 
         public List<string> GetEclipseStructureIds()
         {
@@ -207,11 +202,14 @@ namespace OptiMate.Models
                 completionWarnings.AddRange(structureModel.GetCompletionWarnings());
                 _ea.GetEvent<StructureGeneratedEvent>().Publish(new StructureGeneratedEventInfo { Structure = structureModel, IndexInQueue = index++, TotalToGenerate = _template.GeneratedStructures.Count() });
             }
-            foreach (var tempStructure in _template.GeneratedStructures.Where(x => x.IsTemporary))
+            foreach (var tempStructure in _template.GeneratedStructures)
             {
                 var structureModel = GetGeneratedStructureModel(tempStructure.StructureId);
-                _ea.GetEvent<GeneratedStructureCleaningUpEvent>().Publish(tempStructure.StructureId);
-                await structureModel.RemoveEclipseStructure(tempStructure.StructureId);
+                if (tempStructure.Cleanup == CleanupOptions.Always || (tempStructure.Cleanup == CleanupOptions.WhenEmpty && await structureModel.IsGenStructureEmpty()))
+                {
+                    _ea.GetEvent<GeneratedStructureCleaningUpEvent>().Publish(tempStructure.StructureId);
+                    await structureModel.RemoveEclipseStructure(tempStructure.StructureId);
+                }
             }
             return completionWarnings;
         }
@@ -224,7 +222,7 @@ namespace OptiMate.Models
         internal TemplateStructureModel GetTemplateStructureModel(string structureId)
         {
             var tempStructure = _template.TemplateStructures.FirstOrDefault(x => string.Equals(x.TemplateStructureId, structureId, StringComparison.OrdinalIgnoreCase));
-            return new TemplateStructureModel(tempStructure, _eclipseIds, _ew);
+            return new TemplateStructureModel(tempStructure, this, _eclipseIds, _ew, _ea);
         }
 
         internal void ReorderTemplateStructures(int a, int b)
@@ -232,6 +230,7 @@ namespace OptiMate.Models
             var TemplateStructures = new ObservableCollection<TemplateStructure>(_template.TemplateStructures);
             TemplateStructures.Move(a, b);
             _template.TemplateStructures = TemplateStructures.ToArray();
+            _ea.GetEvent<TemplateStructureOrderChangedEvent>().Publish((a,b));
         }
 
         internal void ReorderGeneratedStructures(int a, int b)
@@ -239,13 +238,13 @@ namespace OptiMate.Models
             var GeneratedStructures = new ObservableCollection<GeneratedStructure>(_template.GeneratedStructures);
             GeneratedStructures.Move(a, b);
             _template.GeneratedStructures = GeneratedStructures.ToArray();
-            _ea.GetEvent<GeneratedStructureOrderChangedEvent>().Publish();
+            _ea.GetEvent<GeneratedStructureOrderChangedEvent>().Publish((a,b));
         }
 
 
 
-      
 
-       
+
+
     }
 }

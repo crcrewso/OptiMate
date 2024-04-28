@@ -23,7 +23,6 @@ namespace OptiMate.Models
     {
         bool ClearFirst { get; set; }
         bool isStructureIdValid { get; }
-        bool IsTemporary { get; set; }
         System.Windows.Media.Color StructureColor { get; set; }
         string StructureId { get; set; }
 
@@ -32,6 +31,8 @@ namespace OptiMate.Models
         System.Windows.Media.Color GetStructureColor();
 
         bool OverwriteColor { get; set; }
+        CleanupOptions CleanupOption { get; set; }
+
         int GetInstructionNumber(IInstructionModel instruction);
         InstructionModel ReplaceInstruction(IInstructionModel instruction, OperatorTypes selectedOperator);
 
@@ -72,6 +73,20 @@ namespace OptiMate.Models
         private void RegisterEvents()
         {
             _ea.GetEvent<ReadyForGenStructureCleanupEvent>().Subscribe(OnReadyForGenStructureCleanup);
+        }
+
+        public async Task<bool> IsGenStructureEmpty()
+        {
+            bool isEmpty = false;
+            bool Success = await _ew.AsyncRunStructureContext((p, S, _ui) =>
+            {
+                generatedEclipseStructure = S.Structures.FirstOrDefault(x => string.Equals(x.Id, _genStructure.StructureId, StringComparison.OrdinalIgnoreCase));
+                if (generatedEclipseStructure == null || generatedEclipseStructure.IsEmpty)
+                {
+                    isEmpty = true;
+                }
+            });
+            return isEmpty;
         }
 
         private void OnReadyForGenStructureCleanup()
@@ -205,22 +220,23 @@ namespace OptiMate.Models
             }
         }
 
-        public bool IsTemporary
-        {
-            get
-            {
-                return _genStructure.IsTemporary;
-            }
-            set
-            {
-                _genStructure.IsTemporary = value;
-            }
-        }
 
         public bool OverwriteColor
         {
             get { return _genStructure.OverwriteColor; }
             set { _genStructure.OverwriteColor = value; }
+        }
+
+        public CleanupOptions CleanupOption 
+        {
+            get
+            {
+                return _genStructure.Cleanup;
+            }
+            set
+            {
+                _genStructure.Cleanup = value;
+            }
         }
 
         public async Task RemoveEclipseStructure(string structureId)
@@ -231,13 +247,15 @@ namespace OptiMate.Models
                 {
                     var structureToRemove = ss.Structures.First(x => x.Id == structureId);
                     if (structureToRemove != null)
+                    {
                         ss.RemoveStructure(structureToRemove);
+                        SeriLogModel.AddLog($"Structure {structureId} was deleted based on its cleanup option...");
+                    }
                 });
-                SeriLogModel.AddLog($"Temporary structure {structureId} deleted from structure set...");
             }
             catch (Exception ex)
             {
-                SeriLogModel.AddError($"Error deleting temporary structure {structureId}...", ex);
+                SeriLogModel.AddError($"Error deleting structure {structureId}...", ex);
             }
 
         }
@@ -397,19 +415,19 @@ namespace OptiMate.Models
             InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Pending;
             bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
             {
-                StructureMappingModel TargetStructure = _templateModel.AvailableTargets.GetAugmentedTemplateStructures(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TemplateStructureId, cropInstruction.TemplateStructureId, StringComparison.OrdinalIgnoreCase));
+                InstructionTargetModel TargetStructure = _templateModel.AvailableTargets.GetInstructionTargets(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TargetStructureId, cropInstruction.TargetStructureId, StringComparison.OrdinalIgnoreCase));
                 Structure EclipseTarget = GetTempTargetStructure(S, TargetStructure.EclipseStructureId);
                 CheckForHRConversion(TargetStructure.EclipseStructureId, EclipseTarget);
                 if (TargetStructure == null)
                 {
-                    var warning = $"Target of ASYMMETRIC CROP operation [{cropInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
+                    var warning = $"Target of ASYMMETRIC CROP operation [{cropInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
                     _warnings.Add(warning);
                     completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                     return;
                 }
                 else if (EclipseTarget.IsEmpty)
                 {
-                    var warning = $"Target of ASYMMETRIC CROP operation [{cropInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
+                    var warning = $"Target of ASYMMETRIC CROP operation [{cropInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
                     _warnings.Add(warning);
                     completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                     return;
@@ -490,12 +508,12 @@ namespace OptiMate.Models
             InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Completed;
             bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
             {
-                StructureMappingModel TargetStructure = _templateModel.AvailableTargets.GetAugmentedTemplateStructures(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TemplateStructureId, cropInstruction.TemplateStructureId, StringComparison.OrdinalIgnoreCase));
+                InstructionTargetModel TargetStructure = _templateModel.AvailableTargets.GetInstructionTargets(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TargetStructureId, cropInstruction.TargetStructureId, StringComparison.OrdinalIgnoreCase));
                 Structure EclipseTarget = GetTempTargetStructure(S, TargetStructure.EclipseStructureId);
                 CheckForHRConversion(TargetStructure.EclipseStructureId, EclipseTarget);
                 if (EclipseTarget == null)
                 {
-                    var warning = $"Target of CROP operation [{cropInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
+                    var warning = $"Target of CROP operation [{cropInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
                     _warnings.Add(warning);
                     completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                     return;
@@ -504,7 +522,7 @@ namespace OptiMate.Models
                 {
                     if (EclipseTarget.IsEmpty)
                     {
-                        var warning = $"Target of CROP operation [{cropInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
+                        var warning = $"Target of CROP operation [{cropInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
                         _warnings.Add(warning);
                         completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                         return;
@@ -708,12 +726,12 @@ namespace OptiMate.Models
             InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Completed;
             bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
             {
-                StructureMappingModel TargetStructure = _templateModel.AvailableTargets.GetAugmentedTemplateStructures(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TemplateStructureId, andInstruction.TemplateStructureId, StringComparison.OrdinalIgnoreCase));
+                InstructionTargetModel TargetStructure = _templateModel.AvailableTargets.GetInstructionTargets(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TargetStructureId, andInstruction.TargetStructureId, StringComparison.OrdinalIgnoreCase));
                 Structure EclipseTarget = GetTempTargetStructure(S, TargetStructure.EclipseStructureId);
                 CheckForHRConversion(TargetStructure.EclipseStructureId, EclipseTarget);
                 if (TargetStructure == null)
                 {
-                    var warning = $"Target of AND operation [{andInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is null, clearing generated structure...";
+                    var warning = $"Target of AND operation [{andInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is null, clearing generated structure...";
                     _warnings.Add(warning);
                     SeriLogModel.AddWarning(warning);
                     generatedEclipseStructure = ClearStructure(S, generatedEclipseStructure);
@@ -721,7 +739,7 @@ namespace OptiMate.Models
                 }
                 else if (EclipseTarget.IsEmpty)
                 {
-                    var warning = $"Target of AND operation [{andInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is empty, clearing generated structure...";
+                    var warning = $"Target of AND operation [{andInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is empty, clearing generated structure...";
                     _warnings.Add(warning);
                     SeriLogModel.AddWarning(warning);
                     generatedEclipseStructure.SegmentVolume = generatedEclipseStructure.SegmentVolume.And(EclipseTarget.SegmentVolume);
@@ -729,7 +747,7 @@ namespace OptiMate.Models
                 }
                 else
                 {
-                    SeriLogModel.AddWarning($"Performing AND between {andInstruction.TemplateStructureId} and {_genStructure.StructureId}...");
+                    SeriLogModel.AddWarning($"Performing AND between {andInstruction.TargetStructureId} and {_genStructure.StructureId}...");
                     generatedEclipseStructure.SegmentVolume = generatedEclipseStructure.SegmentVolume.And(EclipseTarget.SegmentVolume);
                 }
                 S.RemoveStructure(EclipseTarget);
@@ -741,12 +759,12 @@ namespace OptiMate.Models
             InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Completed;
             bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
             {
-                StructureMappingModel TargetStructure = _templateModel.AvailableTargets.GetAugmentedTemplateStructures(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TemplateStructureId, subInstruction.TemplateStructureId, StringComparison.OrdinalIgnoreCase));
+                InstructionTargetModel TargetStructure = _templateModel.AvailableTargets.GetInstructionTargets(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TargetStructureId, subInstruction.TargetStructureId, StringComparison.OrdinalIgnoreCase));
                 Structure EclipseTarget = GetTempTargetStructure(S, TargetStructure.EclipseStructureId);
                 CheckForHRConversion(TargetStructure.EclipseStructureId, EclipseTarget);
                 if (EclipseTarget == null)
                 {
-                    var warning = $"Target of SUB operation [{subInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
+                    var warning = $"Target of SUB operation [{subInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
                     _warnings.Add(warning);
                     completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                     return;
@@ -755,14 +773,14 @@ namespace OptiMate.Models
                 {
                     if (EclipseTarget.IsEmpty)
                     {
-                        var warning = $"Target of SUB operation [{subInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
+                        var warning = $"Target of SUB operation [{subInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
                         _warnings.Add(warning);
                         completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                         return;
                     }
                     else
                     {
-                        SeriLogModel.AddWarning($"Performing SUB of {subInstruction.TemplateStructureId} from {_genStructure.StructureId}...");
+                        SeriLogModel.AddWarning($"Performing SUB of {subInstruction.TargetStructureId} from {_genStructure.StructureId}...");
                         generatedEclipseStructure.SegmentVolume = generatedEclipseStructure.SegmentVolume.Sub(EclipseTarget.SegmentVolume);
                     }
                     S.RemoveStructure(EclipseTarget);
@@ -775,12 +793,12 @@ namespace OptiMate.Models
             InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Completed;
             bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
             {
-                StructureMappingModel TargetStructure = _templateModel.AvailableTargets.GetAugmentedTemplateStructures(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TemplateStructureId, subFromInstruction.TemplateStructureId, StringComparison.OrdinalIgnoreCase));
+                InstructionTargetModel TargetStructure = _templateModel.AvailableTargets.GetInstructionTargets(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TargetStructureId, subFromInstruction.TargetStructureId, StringComparison.OrdinalIgnoreCase));
                 Structure EclipseTarget = GetTempTargetStructure(S, TargetStructure.EclipseStructureId);
                 CheckForHRConversion(TargetStructure.EclipseStructureId, EclipseTarget);
                 if (EclipseTarget == null)
                 {
-                    var warning = $"Target of SUBFROM operation [{subFromInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is null/empty, aborting structure creation...";
+                    var warning = $"Target of SUBFROM operation [{subFromInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is null/empty, aborting structure creation...";
                     _warnings.Add(warning);
                     completionStatus = InstructionCompletionStatus.Failed;
                     return;
@@ -789,13 +807,13 @@ namespace OptiMate.Models
                 {
                     if (EclipseTarget.IsEmpty)
                     {
-                        var warning = $"Target of SUBFROM operation [{subFromInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is empty, aborting structure creation...";
+                        var warning = $"Target of SUBFROM operation [{subFromInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is empty, aborting structure creation...";
                         completionStatus = InstructionCompletionStatus.Failed;
                         _warnings.Add(warning);
                     }
                     else
                     {
-                        SeriLogModel.AddWarning($"Performing SUBFROM of {_genStructure.StructureId} from {subFromInstruction.TemplateStructureId}...");
+                        SeriLogModel.AddWarning($"Performing SUBFROM of {_genStructure.StructureId} from {subFromInstruction.TargetStructureId}...");
                         generatedEclipseStructure.SegmentVolume = EclipseTarget.SegmentVolume.Sub(generatedEclipseStructure.SegmentVolume);
                     }
                     S.RemoveStructure(EclipseTarget);
@@ -829,12 +847,12 @@ namespace OptiMate.Models
             InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Completed;
             bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
             {
-                StructureMappingModel TargetStructure = _templateModel.AvailableTargets.GetAugmentedTemplateStructures(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TemplateStructureId, orInstruction.TemplateStructureId, StringComparison.OrdinalIgnoreCase));
+                InstructionTargetModel TargetStructure = _templateModel.AvailableTargets.GetInstructionTargets(_genStructure.StructureId).FirstOrDefault(x => string.Equals(x.TargetStructureId, orInstruction.TargetStructureId, StringComparison.OrdinalIgnoreCase));
                 Structure EclipseTarget = GetTempTargetStructure(S, TargetStructure.EclipseStructureId);
                 CheckForHRConversion(TargetStructure.EclipseStructureId, EclipseTarget);
                 if (EclipseTarget == null)
                 {
-                    var warning = $"Target of OR operation [{orInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
+                    var warning = $"Target of OR operation [{orInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is null/empty, skipping instruction...";
                     completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                     _warnings.Add(warning);
                     return;
@@ -843,14 +861,14 @@ namespace OptiMate.Models
                 {
                     if (EclipseTarget.IsEmpty)
                     {
-                        var warning = $"Target of OR operation [{orInstruction.TemplateStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
+                        var warning = $"Target of OR operation [{orInstruction.TargetStructureId}] for structure {_genStructure.StructureId} is empty, skipping instruction...";
                         completionStatus = InstructionCompletionStatus.CompletedWithWarning;
                         _warnings.Add(warning);
                         return;
                     }
                     else
                     {
-                        SeriLogModel.AddLog($"Performing OR between {orInstruction.TemplateStructureId} and {_genStructure.StructureId}...");
+                        SeriLogModel.AddLog($"Performing OR between {orInstruction.TargetStructureId} and {_genStructure.StructureId}...");
                         generatedEclipseStructure.SegmentVolume = generatedEclipseStructure.SegmentVolume.Or(EclipseTarget.SegmentVolume);
                     }
                     S.RemoveStructure(EclipseTarget);
@@ -983,8 +1001,6 @@ namespace OptiMate.Models
                     }));
 
                 }
-                await ConvertToHighResolution();
-
             }
             catch (Exception ex)
             {

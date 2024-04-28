@@ -39,7 +39,7 @@
                         </Grid.ColumnDefinitions>
                         <Image Grid.Column="0" Source="../Resources/edit.png" Height="12" Width="12" VerticalAlignment="Center" Margin="10,0,5,0" />
                         <TextBlock Grid.Column="1" Text="Edit Template Structure:" Foreground="Black" FontSize="13" FontWeight="Bold" Margin="0,0,0,0" VerticalAlignment="Center"/>
-                        <TextBox Grid.Column="2" Text="{Binding TemplateStructureId, UpdateSourceTrigger=PropertyChanged}" behaviours:TextBoxExtensions.UpdateSourceOnKey="Return"
+                        <TextBox Grid.Column="2" Text="{Binding TemplateStructureId, UpdateSourceTrigger=PropertyChanged}" behaviours:TextBoxExtensions.UpdateSourceOnKey="Return" Background="{Binding TemplateStructureIdBackgroundColor, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource TextBoxStyle1}" FontSize="13" FontWeight="Bold"  Margin="10,0,5,0" Width="Auto" HorizontalAlignment="Left" MaxWidth="200" Padding="10,0,10,0"/>
                     </Grid>
                     <Border Grid.Row="1" Height="1" HorizontalAlignment="Stretch" Margin="10,5,10,0" Background="CornflowerBlue"/>
@@ -106,7 +106,9 @@
                             <Image Source="..\Resources\plus_black.png" ToolTip="Add alias"/>
                         </Button>
                     </Border>
-                    <Button Grid.Column="3" Style="{StaticResource ButtonStyle_Medium}" Width="60" Height="25" HorizontalAlignment="Right" Margin="5,0,5,0" Command="{Binding ConfirmCommand}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Popup}}}">
+                    <Button Grid.Column="3" Style="{StaticResource ButtonStyle_Medium}" Width="60" Height="25" HorizontalAlignment="Right" Margin="5,0,5,0" Command="{Binding ConfirmCommand}" 
+                            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Popup}}}"
+                            IsEnabled="{Binding InputsValid, UpdateSourceTrigger=PropertyChanged}">
                         <TextBlock Text="Close" FontWeight="DemiBold"/>
                     </Button>
                 </Grid>

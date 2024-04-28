@@ -352,19 +352,19 @@ namespace OptiMate.Models
                             switch (inst)
                             {
                                 case Or or:
-                                    or.TemplateStructureId = or.TemplateStructureId ?? "";
+                                    or.TargetStructureId = or.TargetStructureId ?? "";
                                     break;
                                 case And and:
-                                    and.TemplateStructureId = and.TemplateStructureId ?? "";
+                                    and.TargetStructureId = and.TargetStructureId ?? "";
                                     break;
                                 case Sub sub:
-                                    sub.TemplateStructureId = sub.TemplateStructureId ?? "";
+                                    sub.TargetStructureId = sub.TargetStructureId ?? "";
                                     break;
                                 case SubFrom subFrom:
-                                    subFrom.TemplateStructureId = subFrom.TemplateStructureId ?? "";
+                                    subFrom.TargetStructureId = subFrom.TargetStructureId ?? "";
                                     break;
                                 case Crop crop:
-                                    crop.TemplateStructureId = crop.TemplateStructureId ?? "";
+                                    crop.TargetStructureId = crop.TargetStructureId ?? "";
                                     break;
                             }
                 }

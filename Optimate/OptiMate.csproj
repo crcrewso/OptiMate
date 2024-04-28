@@ -163,7 +163,7 @@
     <Compile Include="Models\InstructionModelTest.cs" />
     <Compile Include="Models\MainModel.cs" />
     <Compile Include="Models\OptiMateTypes.cs" />
-    <Compile Include="Models\StructureMappingModel.cs" />
+    <Compile Include="Models\InstructionTargetModel.cs" />
     <Compile Include="Models\TemplateModel.cs" />
     <Compile Include="Models\TemplateStructureModel.cs" />
     <Compile Include="ObservableObject.cs" />

@@ -166,7 +166,7 @@ namespace OptiMate.ViewModels
                 }
                 else
                 {
-                    return Brushes.LightGoldenrodYellow; 
+                    return Brushes.LightGoldenrodYellow;
                 }
             }
         }
@@ -999,32 +999,35 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public string TargetTemplateStructureId
+        public InstructionTargetModel TargetStructure
         {
             get
             {
-                return _instructionModel.InstructionTargetId;
+                return _instructionModel.InstructionTarget;
             }
             set
             {
-                _instructionModel.InstructionTargetId = value;
+                _instructionModel.InstructionTarget = value;
                 ValidateTargetTemplateStructureId();
             }
         }
 
         private void ValidateTargetTemplateStructureId()
         {
-            ClearErrors(nameof(TargetTemplateStructureId));
+            ClearErrors(nameof(TargetStructure));
             if (_instructionModel.InstructionHasTarget())
             {
-                if (!string.Equals(DefaultTemplateStructureId, TargetTemplateStructureId, StringComparison.OrdinalIgnoreCase))
-                    isModified = true;
-                else
-                    isModified = false;
-                if (string.IsNullOrEmpty(TargetTemplateStructureId))
+                if (TargetStructure == null)
                 {
                     int instructionNumber = _parentGeneratedStructure.GetInstructionNumber(_instructionModel);
-                    AddError(nameof(TargetTemplateStructureId), $"{_parentGeneratedStructure.StructureId} operator #{instructionNumber + 1} has an invalid target of operation.");
+                    AddError(nameof(TargetStructure), $"{_parentGeneratedStructure.StructureId} operator #{instructionNumber + 1} has an invalid target of operation.");
+                }
+                else
+                {
+                    if (!string.Equals(DefaultTemplateStructureId, TargetStructure.TargetStructureId, StringComparison.OrdinalIgnoreCase))
+                        isModified = true;
+                    else
+                        isModified = false;
                 }
             }
             RaisePropertyChangedEvent(nameof(TargetTemplateBackgroundColor));
@@ -1048,7 +1051,7 @@ namespace OptiMate.ViewModels
         {
             get
             {
-                if (HasError(nameof(TargetTemplateStructureId)))
+                if (HasError(nameof(TargetStructure)))
                 {
                     return new SolidColorBrush(Colors.DarkOrange);
                 }
@@ -1076,13 +1079,12 @@ namespace OptiMate.ViewModels
 
 
 
-        public ObservableCollection<string> TargetTemplateIds
+        public ObservableCollection<InstructionTargetModel> InstructionTargets
         {
             get
             {
-                var structureMappings = _instructionModel.GetAvailableTargetIds();
-                var ids = new ObservableCollection<string>(structureMappings.Select(x => x.TemplateStructureId));
-                return ids;
+                var targetModels = _instructionModel.GetAvailableTargets();
+                return new ObservableCollection<InstructionTargetModel>(targetModels);
             }
         }
 
@@ -1103,19 +1105,19 @@ namespace OptiMate.ViewModels
             {
                 case OperatorTypes.or:
                     _selectedOperator = OperatorTypes.or;
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    RaisePropertyChangedEvent(nameof(TargetStructure));
                     break;
                 case OperatorTypes.and:
                     _selectedOperator = OperatorTypes.and;
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    RaisePropertyChangedEvent(nameof(TargetStructure));
                     break;
                 case OperatorTypes.sub:
                     _selectedOperator = OperatorTypes.sub;
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    RaisePropertyChangedEvent(nameof(TargetStructure));
                     break;
                 case OperatorTypes.subfrom:
                     _selectedOperator = OperatorTypes.subfrom;
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    RaisePropertyChangedEvent(nameof(TargetStructure));
                     break;
                 case OperatorTypes.margin:
                     _selectedOperator = OperatorTypes.margin;
@@ -1139,12 +1141,12 @@ namespace OptiMate.ViewModels
                     break;
                 case OperatorTypes.convertResolution:
                     _selectedOperator = OperatorTypes.convertResolution;
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    RaisePropertyChangedEvent(nameof(TargetStructure));
                     break;
                 case OperatorTypes.crop:
                     _selectedOperator = OperatorTypes.crop;
                     IsoCropOffset = _instructionModel.IsoCropOffset.ToString();
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    RaisePropertyChangedEvent(nameof(TargetStructure));
                     RaisePropertyChangedEvent(nameof(InternalCrop));
                     break;
                 case OperatorTypes.asymmetricCrop:
@@ -1155,7 +1157,7 @@ namespace OptiMate.ViewModels
                     AntCropOffset = _instructionModel.AntCropOffset.ToString();
                     SupCropOffset = _instructionModel.SupCropOffset.ToString();
                     InfCropOffset = _instructionModel.InfCropOffset.ToString();
-                    RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
+                    RaisePropertyChangedEvent(nameof(TargetStructure));
                     RaisePropertyChangedEvent(nameof(InternalCrop));
                     break;
                 case OperatorTypes.partition:
@@ -1179,20 +1181,31 @@ namespace OptiMate.ViewModels
         public InstructionViewModel()
         {
             // Design use only
-            TargetTemplateStructureId = "DesignId";
+            TargetStructure = new InstructionTargetModel("Design", "DesignEclipse");
             _instructionModel = new InstructionModelTest();
         }
 
         public void RegisterEvents()
         {
-            _ea.GetEvent<NewTemplateStructureEvent>().Subscribe(OnNewTemplateStructureEvent);
+            _ea.GetEvent<InstructionTargetChangedEvent>().Subscribe(OnInstructionTargetChanged);
             _ea.GetEvent<RemovedInstructionEvent>().Subscribe(OnRemovedInstruction);
-            _ea.GetEvent<TemplateStructureIdChangedEvent>().Subscribe(OnTemplateStructureIdChanged);
-            _ea.GetEvent<RemovedTemplateStructureEvent>().Subscribe(RemoveTemplateStructureFromList);
-            _ea.GetEvent<RemovedGeneratedStructureEvent>().Subscribe(RemoveGeneratedStructureFromList);
-            _ea.GetEvent<GeneratedStructureIdChangedEvent>().Subscribe(OnGeneratedStructureIdChanged);
-            _ea.GetEvent<GeneratedStructureOrderChangedEvent>().Subscribe(OnGeneratedStructureOrderChanged);
+            _ea.GetEvent<AvailableTargetModelUpdated>().Subscribe(OnAvailableTargetModelUpdated);
             ErrorsChanged += (sender, args) => { _ea.GetEvent<DataValidationRequiredEvent>().Publish(); };
+        }
+
+        private void OnAvailableTargetModelUpdated()
+        {
+            RaisePropertyChangedEvent(nameof(InstructionTargets));
+        }
+
+        private void OnInstructionTargetChanged(InstructionModel model)
+        {
+            if (_instructionModel == model)
+            {
+                RaisePropertyChangedEvent(nameof(DefaultTemplateStructureId));
+                RaisePropertyChangedEvent(nameof(TargetStructure));
+                RaisePropertyChangedEvent(nameof(InstructionTargets));
+            }
         }
 
         private void OnRemovedInstruction(InstructionRemovedEventInfo info)
@@ -1201,71 +1214,10 @@ namespace OptiMate.ViewModels
                 _ea.GetEvent<RemovingInstructionViewModelEvent>().Publish(this);
         }
 
-        private void RemoveGeneratedStructureFromList(RemovedGeneratedStructureEventInfo info)
+        private void DataValidationRequiredEvent((int,int) orderChange)
         {
-            if (_parentGeneratedStructure.StructureId != info.RemovedStructureId)
-            {
-                RaisePropertyChangedEvent(nameof(TargetTemplateIds));
-            }
+            RaisePropertyChangedEvent(nameof(InstructionTargets));
         }
-
-        private void OnGeneratedStructureOrderChanged()
-        {
-            RaisePropertyChangedEvent(nameof(TargetTemplateIds));
-        }
-
-        private void OnGeneratedStructureIdChanged(GeneratedStructureIdChangedEventInfo info)
-        {
-            if (TargetTemplateStructureId == info.OldId)
-            {
-                DefaultTemplateStructureId = info.NewId;
-                TargetTemplateStructureId = info.NewId;
-                RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
-            }
-            RaisePropertyChangedEvent(nameof(TargetTemplateIds));
-            // Update error messaging
-            foreach (var errorProperty in PropertiesWithErrrors())
-            {
-                if (HasError(errorProperty))
-                {
-                    var propInfo = GetType().GetProperty(errorProperty);
-                    if (propInfo != null)
-                    {
-                        var value = propInfo.GetValue(this);
-                        propInfo.SetValue(this, null);
-                        propInfo.SetValue(this, value); // need to change due to FODY
-                    }
-                }
-            }
-            
-        }
-
-        private void OnNewTemplateStructureEvent(NewTemplateStructureEventInfo info)
-        {
-            RaisePropertyChangedEvent(nameof(TargetTemplateIds));
-        }
-
-
-        private void RemoveTemplateStructureFromList(RemovedTemplateStructureEventInfo info)
-        {
-            if (info.RemovedTemplateStructureId != TargetTemplateStructureId)
-            {
-                // Leave this property unchanged if it's the one being removed, so it can be found and cleaned up.
-                RaisePropertyChangedEvent(nameof(TargetTemplateIds));
-            }
-        }
-
-        private void OnTemplateStructureIdChanged(TemplateStructureIdChangedEventInfo info)
-        {
-            RaisePropertyChangedEvent(nameof(TargetTemplateIds));
-            if (info.OldId == TargetTemplateStructureId)
-            {
-                DefaultTemplateStructureId = info.NewId;
-                TargetTemplateStructureId = info.NewId;
-                RaisePropertyChangedEvent(nameof(TargetTemplateStructureId));
-            }
-        }
-
 
         public ICommand RemoveInstructionCommand
         {
