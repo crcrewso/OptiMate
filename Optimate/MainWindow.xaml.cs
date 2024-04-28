@@ -152,8 +152,6 @@ namespace OptiMate
         {
             var VM = (DataContext as ViewModels.ViewModel).ActiveTemplate;
             var SelectedIndex = DragGenStructure_GetCurrentIndex(e.GetPosition);
-            //
-
             var DropIndex = VM.SelectedGSIndex;
             if (SelectedIndex < 0)
                 return;
@@ -189,5 +187,6 @@ namespace OptiMate
         {
 
         }
+
     }
 }

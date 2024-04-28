@@ -636,6 +636,27 @@ namespace OptiMate.Converters
         }
     }
 
+    public class ConvertToCleanUpName : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+             object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value is CleanupOptions)
+            {
+                CleanupOptions V = (CleanupOptions)value;
+                return Helpers.CleanupOptions(V);
+            }
+            else
+                return "";
+        }
+        public object ConvertBack(object value, Type targetTypes,
+             object parameter, System.Globalization.CultureInfo culture)
+        {
+            return null;
+        }
+    }
+    
+
     public class VisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType,

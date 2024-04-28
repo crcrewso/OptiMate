@@ -87,12 +87,15 @@ namespace OptiMate.Models
 
         public bool IsHUValueValid => throw new NotImplementedException();
 
+        public InstructionTargetModel InstructionTarget { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        
+        
         string IInstructionModel.DefaultInstructionTargetId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         bool? IInstructionModel.InternalCrop { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         OperatorTypes IInstructionModel.Operator => throw new NotImplementedException();
 
-        public List<StructureMappingModel> GetAvailableTargetIds()
+        public List<InstructionTargetModel> GetAvailableTargets()
         {
             throw new NotImplementedException();
         }

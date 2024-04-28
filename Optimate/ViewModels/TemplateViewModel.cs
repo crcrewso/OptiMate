@@ -219,7 +219,7 @@ namespace OptiMate.ViewModels
 
         }
 
-       
+
         internal bool ValidateInputs(List<string> aggregateWarnings)
         {
             bool isValid = true;
@@ -256,5 +256,8 @@ namespace OptiMate.ViewModels
         {
             return await _templateModel.GenerateStructures();
         }
+
+
+
     }
 }

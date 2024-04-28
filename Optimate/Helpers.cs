@@ -118,7 +118,7 @@ namespace OptiMate
                 case OperatorTypes.setHU:
                     return "Set HU";
                 default:
-                    return "Unknown";
+                    throw new Exception("Unknown operatory type when converting to display name");
             }
         }
 
@@ -127,6 +127,20 @@ namespace OptiMate
             return alias.Replace("_", "").Replace(" ", "").Replace("-", "");
         }
 
+        internal static string CleanupOptions(CleanupOptions v)
+        {
+            switch (v)
+            {
+                case OptiMate.CleanupOptions.None:
+                    return "None";
+                case OptiMate.CleanupOptions.WhenEmpty:
+                    return "If empty";
+                case OptiMate.CleanupOptions.Always:
+                    return "Always";
+                default:
+                    throw new Exception("Unknown cleanup option when converting to display");
+            }
+        }
 
         public static class OrientationInvariantMargins
         {
@@ -378,7 +392,7 @@ namespace OptiMate
                 return Vol.x / 1000;
             }
 
-           
+
         }
     }
 }

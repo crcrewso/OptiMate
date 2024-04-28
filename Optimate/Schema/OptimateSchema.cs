@@ -266,7 +266,7 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class AsymmetricCrop : Instruction {
         
-        private string templateStructureIdField;
+        private string targetStructureIdField;
         
         private bool internalCropField;
         
@@ -288,12 +288,12 @@ namespace OptiMate {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TemplateStructureId {
+        public string TargetStructureId {
             get {
-                return this.templateStructureIdField;
+                return this.targetStructureIdField;
             }
             set {
-                this.templateStructureIdField = value;
+                this.targetStructureIdField = value;
             }
         }
         
@@ -489,7 +489,7 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class Crop : Instruction {
         
-        private string templateStructureIdField;
+        private string targetStructureIdField;
         
         private bool internalCropField;
         
@@ -502,12 +502,12 @@ namespace OptiMate {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TemplateStructureId {
+        public string TargetStructureId {
             get {
-                return this.templateStructureIdField;
+                return this.targetStructureIdField;
             }
             set {
-                this.templateStructureIdField = value;
+                this.targetStructureIdField = value;
             }
         }
         
@@ -588,16 +588,16 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class SubFrom : Instruction {
         
-        private string templateStructureIdField;
+        private string targetStructureIdField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TemplateStructureId {
+        public string TargetStructureId {
             get {
-                return this.templateStructureIdField;
+                return this.targetStructureIdField;
             }
             set {
-                this.templateStructureIdField = value;
+                this.targetStructureIdField = value;
             }
         }
     }
@@ -610,16 +610,16 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class Sub : Instruction {
         
-        private string templateStructureIdField;
+        private string targetStructureIdField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TemplateStructureId {
+        public string TargetStructureId {
             get {
-                return this.templateStructureIdField;
+                return this.targetStructureIdField;
             }
             set {
-                this.templateStructureIdField = value;
+                this.targetStructureIdField = value;
             }
         }
     }
@@ -632,16 +632,16 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class And : Instruction {
         
-        private string templateStructureIdField;
+        private string targetStructureIdField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TemplateStructureId {
+        public string TargetStructureId {
             get {
-                return this.templateStructureIdField;
+                return this.targetStructureIdField;
             }
             set {
-                this.templateStructureIdField = value;
+                this.targetStructureIdField = value;
             }
         }
     }
@@ -654,16 +654,16 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class Or : Instruction {
         
-        private string templateStructureIdField;
+        private string targetStructureIdField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TemplateStructureId {
+        public string TargetStructureId {
             get {
-                return this.templateStructureIdField;
+                return this.targetStructureIdField;
             }
             set {
-                this.templateStructureIdField = value;
+                this.targetStructureIdField = value;
             }
         }
     }
@@ -724,7 +724,7 @@ namespace OptiMate {
         
         private string structureIdField;
         
-        private bool isTemporaryField;
+        private CleanupOptions cleanupField;
         
         private bool clearFirstField;
         
@@ -735,7 +735,7 @@ namespace OptiMate {
         private bool overwriteColorField;
         
         public GeneratedStructure() {
-            this.isTemporaryField = false;
+            this.cleanupField = CleanupOptions.None;
             this.clearFirstField = true;
             this.dicomTypeField = "CONTROL";
             this.overwriteColorField = false;
@@ -764,13 +764,13 @@ namespace OptiMate {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
-        public bool IsTemporary {
+        [System.ComponentModel.DefaultValueAttribute(CleanupOptions.None)]
+        public CleanupOptions Cleanup {
             get {
-                return this.isTemporaryField;
+                return this.cleanupField;
             }
             set {
-                this.isTemporaryField = value;
+                this.cleanupField = value;
             }
         }
         
@@ -853,6 +853,22 @@ namespace OptiMate {
                 this.itemsField = value;
             }
         }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
+    public enum CleanupOptions {
+        
+        /// <remarks/>
+        None,
+        
+        /// <remarks/>
+        WhenEmpty,
+        
+        /// <remarks/>
+        Always,
     }
     
     /// <remarks/>

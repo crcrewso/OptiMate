@@ -29,6 +29,7 @@ namespace OptiMate.ViewModels
         public bool isStructureIdValid => throw new NotImplementedException();
 
         public bool OverwriteColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public CleanupOptions CleanupOption { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public InstructionModel AddInstruction(OperatorTypes op, int index) { return null; }
         public InstructionModel ReplaceInstruction(Instruction inst, OperatorTypes op) { return null; }
@@ -65,7 +66,7 @@ namespace OptiMate.ViewModels
     {
         private IGeneratedStructureModel _generatedStructureModel;
         private IEventAggregator _ea;
-        private List<StructureMappingModel> _mappings;
+        private List<InstructionTargetModel> _mappings;
         public GeneratedStructureViewModel(GeneratedStructureModel genStructureModel, IEventAggregator ea, bool isNew = false)
         {
             _generatedStructureModel = genStructureModel;
@@ -182,22 +183,41 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public bool isTemporary
+        public ObservableCollection<CleanupOptions> CleanupOptions { get; set; } = new ObservableCollection<CleanupOptions> { OptiMate.CleanupOptions.None, OptiMate.CleanupOptions.WhenEmpty, OptiMate.CleanupOptions.Always };
+
+        public CleanupOptions CleanupOption
         {
             get
             {
-                return _generatedStructureModel.IsTemporary;
+                return _generatedStructureModel.CleanupOption;
             }
             set
             {
-                if (value != _generatedStructureModel.IsTemporary)
+                if (value != _generatedStructureModel.CleanupOption)
                 {
-                    _generatedStructureModel.IsTemporary = value;
+                    _generatedStructureModel.CleanupOption = value;
                     isModified = true;
                     RaisePropertyChangedEvent(nameof(WarningVisibility_GenStructureChanged));
                 }
             }
         }
+
+        //public bool isTemporary
+        //{
+        //    get
+        //    {
+        //        return _generatedStructureModel.IsTemporary;
+        //    }
+        //    set
+        //    {
+        //        if (value != _generatedStructureModel.IsTemporary)
+        //        {
+        //            _generatedStructureModel.IsTemporary = value;
+        //            isModified = true;
+        //            RaisePropertyChangedEvent(nameof(WarningVisibility_GenStructureChanged));
+        //        }
+        //    }
+        //}
 
         public ObservableCollection<InstructionViewModel> InstructionViewModels { get; set; } = new ObservableCollection<InstructionViewModel>();
 

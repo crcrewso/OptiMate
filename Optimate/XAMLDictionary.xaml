@@ -764,13 +764,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <Storyboard x:Key="CollapsePanel" Duration="0:0:0.5">
-        <DoubleAnimation BeginTime="0:0:0" Duration="0:0:0.5" Storyboard.TargetProperty="Tag" By="0.01" To="0"/>
-    </Storyboard>
-    <Storyboard x:Key="ExpandPanel" Duration="0:0:0.5">
-        <DoubleAnimation BeginTime="0:0:0" Duration="0:0:0.5" Storyboard.TargetProperty="Tag" By="0.01" To="1"/>
-    </Storyboard>
-    <Style x:Key="ListViewStyle1" TargetType="{x:Type ListView}">
+       <Style x:Key="ListViewStyle1" TargetType="{x:Type ListView}">
         <Setter Property="Background" Value="White"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="1"/>

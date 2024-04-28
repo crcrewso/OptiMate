@@ -17,6 +17,13 @@
       <xs:enumeration value="setHU" />
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="CleanupOptions" final="restriction">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None" />
+      <xs:enumeration value="WhenEmpty" />
+      <xs:enumeration value="Always" />
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name="emptyString">
     <xs:restriction base="xs:string">
       <xs:length value="0" />
@@ -76,7 +83,7 @@
           </xs:element>
         </xs:sequence>
         <xs:attribute name="StructureId" type="xs:string" use="required"/>
-        <xs:attribute name="IsTemporary" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="Cleanup" type="OptiMate:CleanupOptions" use="optional" default="None"/>
         <xs:attribute name="ClearFirst" type="xs:boolean" use="optional" default="true"/>
         <xs:attribute name="DicomType" type="xs:string" default="CONTROL"/>
         <xs:attribute name="StructureColor" type="OptiMate:colorString" />
@@ -94,28 +101,28 @@
   <xs:complexType name="Or">
     <xs:complexContent mixed="false">
       <xs:extension base="OptiMate:Instruction">
-        <xs:attribute name="TemplateStructureId" type="xs:string" use="required"/>
+        <xs:attribute name="TargetStructureId" type="xs:string" use="required"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="And">
     <xs:complexContent mixed="false">
       <xs:extension base="OptiMate:Instruction">
-        <xs:attribute name="TemplateStructureId" type="xs:string" use="required"/>
+        <xs:attribute name="TargetStructureId" type="xs:string" use="required"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="Sub">
     <xs:complexContent mixed="false">
       <xs:extension base="OptiMate:Instruction">
-        <xs:attribute name="TemplateStructureId" type="xs:string" use="required"/>
+        <xs:attribute name="TargetStructureId" type="xs:string" use="required"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="SubFrom">
     <xs:complexContent mixed="false">
       <xs:extension base="OptiMate:Instruction">
-        <xs:attribute name="TemplateStructureId" type="xs:string" use="required"/>
+        <xs:attribute name="TargetStructureId" type="xs:string" use="required"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -136,7 +143,7 @@
   <xs:complexType name="Crop">
     <xs:complexContent mixed="false">
       <xs:extension base="OptiMate:Instruction">
-        <xs:attribute name="TemplateStructureId" type="xs:string" use="required"/>
+        <xs:attribute name="TargetStructureId" type="xs:string" use="required"/>
         <xs:attribute name="InternalCrop" type="xs:boolean" use="optional" default="false"/>
         <xs:attribute name="IsotropicOffset" type="OptiMate:MarginRangeOrEmpty" use="optional" default=""/>
       </xs:extension>
@@ -158,7 +165,7 @@
   <xs:complexType name="AsymmetricCrop">
     <xs:complexContent mixed="false">
       <xs:extension base="OptiMate:Instruction">
-        <xs:attribute name="TemplateStructureId" type="xs:string" use="required"/>
+        <xs:attribute name="TargetStructureId" type="xs:string" use="required"/>
         <xs:attribute name="InternalCrop" type="xs:boolean" use="optional" default="false"/>
         <xs:attribute name="AntOffset" type="OptiMate:MarginRangeOrEmpty" use="required"/>
         <xs:attribute name="PostOffset" type="OptiMate:MarginRangeOrEmpty" use="required"/>
