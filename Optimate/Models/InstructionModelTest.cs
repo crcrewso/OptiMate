@@ -70,7 +70,7 @@ namespace OptiMate.Models
 
         public bool IsPostCropOffsetValid => throw new NotImplementedException();
 
-        public bool InternalCrop { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool? InternalCrop { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public bool IsDoseLevelValid => throw new NotImplementedException();
 
@@ -88,8 +88,8 @@ namespace OptiMate.Models
         public bool IsHUValueValid => throw new NotImplementedException();
 
         public InstructionTargetModel InstructionTarget { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        
-        
+        public bool? IsDoseLevelAbsolute { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         string IInstructionModel.DefaultInstructionTargetId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         bool? IInstructionModel.InternalCrop { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 

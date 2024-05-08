@@ -15,6 +15,7 @@ namespace OptiMate.Models
         ushort? AntMargin { get; set; }
         string DefaultInstructionTargetId { get; set; }
         ushort? DoseLevel { get; set; }
+        bool? IsDoseLevelAbsolute { get; set; }
         bool IsDoseLevelValid { get; }
         int Index { get; set; }
         ushort? InfMargin { get; set; }
@@ -1010,6 +1011,26 @@ namespace OptiMate.Models
                         UpdateTargetStructureId();
                     }
                     RegisterEvents(_instructionTarget);
+                }
+            }
+        }
+
+        public bool? IsDoseLevelAbsolute
+        {
+            get
+            {
+                if (Operator == OperatorTypes.convertDose)
+                {
+                    return (_instruction as ConvertDose).isDoseLevelAbsolute;
+                }
+                else
+                    return null;
+            }
+            set
+            {
+                if (Operator == OperatorTypes.convertDose)
+                {
+                    (_instruction as ConvertDose).isDoseLevelAbsolute = (bool)value;
                 }
             }
         }

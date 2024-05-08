@@ -568,6 +568,8 @@ namespace OptiMate {
         
         private ushort doseLevelField;
         
+        private bool isDoseLevelAbsoluteField;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public ushort DoseLevel {
@@ -576,6 +578,17 @@ namespace OptiMate {
             }
             set {
                 this.doseLevelField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool isDoseLevelAbsolute {
+            get {
+                return this.isDoseLevelAbsoluteField;
+            }
+            set {
+                this.isDoseLevelAbsoluteField = value;
             }
         }
     }

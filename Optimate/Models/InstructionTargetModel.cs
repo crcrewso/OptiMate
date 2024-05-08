@@ -1,4 +1,5 @@
 ﻿using Prism.Events;
+using PropertyChanged;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,7 @@ namespace OptiMate.Models
             }
         }
 
+        [SuppressPropertyChangedWarnings]
         private void OnGeneratedStructureIdChanged(GeneratedStructureIdChangedEventInfo info)
         {
             if (TargetStructureId == info.OldId && !_isTemplateStructure)
@@ -40,6 +42,7 @@ namespace OptiMate.Models
             }
         }
 
+        [SuppressPropertyChangedWarnings]
         private void OnTemplateStructureIdChanged(TemplateStructureIdChangedEventInfo info)
         {
             if (TargetStructureId == info.OldId && _isTemplateStructure)

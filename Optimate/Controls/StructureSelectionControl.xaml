@@ -1,0 +1,83 @@
+﻿<UserControl x:Class="OptiMate.Controls.StructureSelectionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:dd="urn:gong-wpf-dragdrop"
+             xmlns:ViewModels ="clr-namespace:OptiMate.ViewModels"
+             xmlns:behaviours="clr-namespace:OptiMate.Behaviours"
+             xmlns:local="clr-namespace:OptiMate.Controls"
+             mc:Ignorable="d" 
+             MaxHeight="500"
+             d:DesignHeight="250" d:DesignWidth="400"
+             d:DataContext="{d:DesignInstance Type=ViewModels:EclipseStructureSelectionViewModel, IsDesignTimeCreatable=True}">
+    <UserControl.Resources>
+        <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" >
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../XAMLDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Border CornerRadius="4,4,4,4" Background="White" Margin="5,0,5,0" BorderBrush="CornflowerBlue" BorderThickness="2" MaxHeight="500" MaxWidth="800" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid Margin="5,5,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Image Grid.Column="0" Source="../Resources/edit.png" Height="12" Width="12" VerticalAlignment="Center" Margin="10,0,5,0" />
+                        <TextBlock Grid.Column="1" Text="Select Structures to Import:" Foreground="Black" FontSize="13" FontWeight="Bold" Margin="0,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Border Grid.Row="1" Height="1" HorizontalAlignment="Stretch" Margin="10,5,10,0" Background="CornflowerBlue"/>
+                </Grid>
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <ListBox Grid.Column="1" x:Name="structure_aliaslist" ItemsSource="{Binding EclipseStructures, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,10,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="White" Style="{DynamicResource ListBoxStyle1}" 
+                         ItemContainerStyle="{DynamicResource DraggableListBoxItemStyle}"
+                         BorderThickness="0"  
+                         dd:DragDrop.IsDragSource="True"
+                         DragDrop.Drop="ListBox_Drop" 
+                         DragDrop.DragOver="AliasList_DragOver">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CheckBoxStyle1}"  Width="18" ToolTip="Select to import" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5,2,5,2" />
+                                    <TextBlock Grid.Column="1" Text="{Binding EclipseId}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="Transparent"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+                <Grid Grid.Row="3" Height="25" HorizontalAlignment="Stretch" Margin="5,10,0,5">
+                    <Button  Style="{StaticResource ButtonStyle_Medium}" Width="110" Height="25" HorizontalAlignment="Right" Margin="5,0,5,0" Command="{Binding ImportCommand}" 
+                            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Popup}}}">
+                        <TextBlock Text="Import Selected" FontWeight="DemiBold"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

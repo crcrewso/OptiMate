@@ -145,6 +145,9 @@
     <Compile Include="Controls\ConfirmationControl.xaml.cs">
       <DependentUpon>ConfirmationControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\StructureSelectionControl.xaml.cs">
+      <DependentUpon>StructureSelectionControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\EditControl.xaml.cs">
       <DependentUpon>EditControl.xaml</DependentUpon>
     </Compile>
@@ -174,6 +177,7 @@
       <DependentUpon>OptimateSchema.xsd</DependentUpon>
     </Compile>
     <Compile Include="Script.cs" />
+    <Compile Include="ViewModels\EclipseStructureSelectionViewModel.cs" />
     <Compile Include="ViewModels\EditControlViewModel.cs" />
     <Compile Include="ViewModels\ConfirmationViewModel.cs" />
     <Compile Include="ViewModels\DescriptionViewModel.cs" />
@@ -190,6 +194,10 @@
     <Page Include="Controls\ConfirmationControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\StructureSelectionControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\EditControl.xaml">
       <SubType>Designer</SubType>
@@ -293,6 +301,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\pointVoxel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\import.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

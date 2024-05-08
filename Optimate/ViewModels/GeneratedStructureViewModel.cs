@@ -66,7 +66,6 @@ namespace OptiMate.ViewModels
     {
         private IGeneratedStructureModel _generatedStructureModel;
         private IEventAggregator _ea;
-        private List<InstructionTargetModel> _mappings;
         public GeneratedStructureViewModel(GeneratedStructureModel genStructureModel, IEventAggregator ea, bool isNew = false)
         {
             _generatedStructureModel = genStructureModel;

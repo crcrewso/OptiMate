@@ -13,6 +13,7 @@ using System.Windows.Media;
 using OptiMate.Logging;
 using OptiMate.Controls;
 using System.Windows.Input;
+using PropertyChanged;
 
 namespace OptiMate.ViewModels
 {
@@ -220,7 +221,7 @@ namespace OptiMate.ViewModels
             };
             _ea.GetEvent<TemplateStructureIdChangedEvent>().Subscribe(OnTemplateStructureIdChanged);
         }
-
+        [SuppressPropertyChangedWarnings]
         private void OnTemplateStructureIdChanged(TemplateStructureIdChangedEventInfo info)
         {
             if (string.Equals(info.NewId, TemplateStructureId, StringComparison.OrdinalIgnoreCase))
@@ -228,7 +229,7 @@ namespace OptiMate.ViewModels
                 RaisePropertyChangedEvent(nameof(TemplateStructureId));
             }
         }
-
+        [SuppressPropertyChangedWarnings]
         private void OnNewStructureCreated(StructureGeneratedEventInfo info)
         {
             if (!EclipseIds.Select(x => x.EclipseId).Contains(info.Structure.StructureId))

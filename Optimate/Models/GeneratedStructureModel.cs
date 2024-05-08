@@ -583,27 +583,36 @@ namespace OptiMate.Models
             InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Completed;
             bool Done = await Task.Run(() => _ew.AsyncRunPlanContext((p, pl, S, ui) =>
             {
-                if (pl == null)
-                {
-                    completionStatus = InstructionCompletionStatus.Failed;
-                    var warning = $"Convert dose instruction failed as no plan was found";
-                    _warnings.Add(warning);
-                    SeriLogModel.AddWarning(warning);
-                }
-                else if (pl.Dose == null)
-                {
-                    completionStatus = InstructionCompletionStatus.Failed;
-                    var warning = $"Convert dose instruction failed as no dose distribution was found";
-                    _warnings.Add(warning);
-                    SeriLogModel.AddWarning(warning);
-                }
-                else
-                {
-                    try
+            if (pl == null)
+            {
+                completionStatus = InstructionCompletionStatus.Failed;
+                var warning = $"Convert dose instruction failed as no plan was found";
+                _warnings.Add(warning);
+                SeriLogModel.AddWarning(warning);
+            }
+            else if (pl.Dose == null)
+            {
+                completionStatus = InstructionCompletionStatus.Failed;
+                var warning = $"Convert dose instruction failed as no dose distribution was found";
+                _warnings.Add(warning);
+                SeriLogModel.AddWarning(warning);
+            }
+            else
+            {
+                try
                     {
-                        pl.DoseValuePresentation = VMS.TPS.Common.Model.Types.DoseValuePresentation.Absolute;
-                        generatedEclipseStructure.ConvertDoseLevelToStructure(pl.Dose, new VMS.TPS.Common.Model.Types.DoseValue(convertDoseInstruction.DoseLevel, VMS.TPS.Common.Model.Types.DoseValue.DoseUnit.cGy));
-                        SeriLogModel.AddLog($"{_genStructure.StructureId} has been converted to the {convertDoseInstruction.DoseLevel} cGy isodose level...");
+                        if (convertDoseInstruction.isDoseLevelAbsolute)
+                        {
+                            pl.DoseValuePresentation = VMS.TPS.Common.Model.Types.DoseValuePresentation.Absolute;
+                            generatedEclipseStructure.ConvertDoseLevelToStructure(pl.Dose, new VMS.TPS.Common.Model.Types.DoseValue(convertDoseInstruction.DoseLevel, VMS.TPS.Common.Model.Types.DoseValue.DoseUnit.cGy));
+                            SeriLogModel.AddLog($"{_genStructure.StructureId} has been converted to the {convertDoseInstruction.DoseLevel} cGy isodose level...");
+                        }
+                        else
+                        {
+                            pl.DoseValuePresentation = VMS.TPS.Common.Model.Types.DoseValuePresentation.Relative;
+                            generatedEclipseStructure.ConvertDoseLevelToStructure(pl.Dose, new VMS.TPS.Common.Model.Types.DoseValue(convertDoseInstruction.DoseLevel, VMS.TPS.Common.Model.Types.DoseValue.DoseUnit.Percent));
+                            SeriLogModel.AddLog($"{_genStructure.StructureId} has been converted to the {convertDoseInstruction.DoseLevel} % isodose level...");
+                        }
                     }
                     catch (Exception e)
                     {

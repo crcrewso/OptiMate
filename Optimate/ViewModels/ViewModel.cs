@@ -51,6 +51,7 @@ namespace OptiMate.ViewModels
                     base.OnCollectionChanged(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
             }
         }
+        [SuppressPropertyChangedWarnings]
         protected override void OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             if (!_suppressNotfication)
@@ -78,7 +79,7 @@ namespace OptiMate.ViewModels
 
         private SolidColorBrush WarningColour = new SolidColorBrush(Colors.DarkOrange);
         public ObservableCollection<string> EclipseIds { get; set; } = new ObservableCollection<string>();
-        public SometimesObservableCollection<TemplatePointer> TemplatePointers { get; set; } = new SometimesObservableCollection<TemplatePointer>();
+        public ObservableCollection<TemplatePointer> TemplatePointers { get; set; } = new ObservableCollection<TemplatePointer>();
 
         public TemplatePointer _selectedTemplate;
         public TemplatePointer SelectedTemplate
@@ -533,12 +534,7 @@ namespace OptiMate.ViewModels
             Working = true;
             ScriptDone = false;
             TemplatePointers.Clear();
-            TemplatePointers.SuppressNotification = true;
-            foreach (TemplatePointer tp in _model.GetTemplates())
-            {
-                TemplatePointers.Add(tp);
-            }
-            TemplatePointers.SuppressNotification = false;
+            TemplatePointers.AddRange(_model.GetTemplates());
             Working = false;
             WaitMessage = "";
         }

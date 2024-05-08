@@ -38,6 +38,7 @@ namespace OptiMate.ViewModels
         public ConfirmationViewModel ConfirmRemoveTemplateStructureVM { get; set; }
         public ConfirmationViewModel ConfirmRemoveGeneratedStructureVM { get; set; }
 
+        public EclipseStructureSelectionViewModel EclipseStructureSelectionVM { get; set; }
         public string TemplateDisplayName
         {
             get
@@ -59,6 +60,7 @@ namespace OptiMate.ViewModels
             RegisterEvents();
             GeneratedStructuresVM = new ObservableCollection<GeneratedStructureViewModel>();
             TemplateStructuresVM = new ObservableCollection<TemplateStructureViewModel>();
+            EclipseStructureSelectionVM = new EclipseStructureSelectionViewModel(_templateModel, this, _ea);
             foreach (var structureId in _templateModel.GetGeneratedStructureIds())
             {
                 var genStructureModel = _templateModel.GetGeneratedStructureModel(structureId);
@@ -186,6 +188,37 @@ namespace OptiMate.ViewModels
             {
                 return new DelegateCommand(ConfirmRemoveTemplateStructure);
             }
+        }
+
+        public ICommand ImportTemplateStructuresFromEclipseCommand
+        {
+            get
+            {
+                return new DelegateCommand(ImportTemplateStructureFromEclipse);
+            }
+        }
+        public ICommand ImportGeneratedStructuresFromEclipseCommand
+        {
+            get
+            {
+                return new DelegateCommand(ImportGeneratedStructureFromEclipse);
+            }
+        }
+
+        public bool ImportTemplateStructureVisibility { get; set; }
+        public bool ImportGeneratedStructureVisibility { get; set; }
+
+
+
+        private void ImportTemplateStructureFromEclipse(object obj)
+        {
+            EclipseStructureSelectionVM.ImportMode = EclipseStructureImportMode.Template;
+            ImportTemplateStructureVisibility = true;
+        }
+        private void ImportGeneratedStructureFromEclipse(object obj)
+        {
+            EclipseStructureSelectionVM.ImportMode = EclipseStructureImportMode.Generated;
+            ImportGeneratedStructureVisibility = true;
         }
 
         public bool HasGeneratedStructures

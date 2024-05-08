@@ -54,7 +54,7 @@
             </Storyboard>
         </ResourceDictionary>
     </Window.Resources>
-    <Grid KeyDown="KeyDown" Margin="20,0,20,10" IsEnabled="{Binding PopupLock,UpdateSourceTrigger=PropertyChanged}">
+    <Grid Margin="20,0,20,10" IsEnabled="{Binding PopupLock,UpdateSourceTrigger=PropertyChanged}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -80,7 +80,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Border Grid.Row="0" CornerRadius="5,5,0,0" Background="CornflowerBlue" HorizontalAlignment="Stretch" Height="25" Margin="0,0,0,10">
+                    <Border Grid.Row="0" CornerRadius="5,5,0,0" Background="CornflowerBlue" HorizontalAlignment="Stretch" Height="30" Margin="0,0,0,10">
                         <TextBlock Text="Template selection" Margin="10,0,0,0"  Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                     </Border>
                     <Grid Grid.Row="1" Margin="5,0,5,10">
@@ -123,7 +123,7 @@
         </Grid>
         <Grid Grid.Row="2" Margin="0,0,0,10">
             <TabControl>
-                <TabItem Header="Structure Mapping" >
+                <TabItem Header="Structure Mapping" FontSize="13">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="267*"/>
@@ -134,7 +134,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <Grid Grid.Row="0" Margin="0,5,0,0" Height="25" Grid.ColumnSpan="2">
+                        <Grid Grid.Row="0" Margin="0,5,0,0" Height="30" Grid.ColumnSpan="2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="250"/>
                                 <ColumnDefinition Width="220"/>
@@ -144,15 +144,22 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock  Text="Template Structures" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Style="{StaticResource ButtonStyle_Small}" Command="{Binding ActiveTemplate.AddTemplateStructureCommand}" Background="PapayaWhip" ToolTip="Add new structure" VerticalAlignment="Center" Margin="10,0,5,0">
-                                        <Image Source="Resources/plus_black.png" Stretch="Fill" />
+                                    <TextBlock  Text="Template Structures" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="13" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Style="{StaticResource ButtonStyle_Small}" Command="{Binding ActiveTemplate.AddTemplateStructureCommand}" Background="PapayaWhip" ToolTip="Add new structure" VerticalAlignment="Center" Margin="10,0,0,0">
+                                        <Image Source="Resources/plus_black.png" Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    </Button>
+                                    <Popup Visibility="Visible" PlacementTarget="{Binding ElementName=ImportTemplateStructureButton}" Width="600" StaysOpen="False" Placement="Right" HorizontalOffset="5" AllowsTransparency="True" IsOpen="{Binding ActiveTemplate.ImportTemplateStructureVisibility, UpdateSourceTrigger=PropertyChanged}">
+                                        <controls:StructureSelectionControl MinHeight="35" Height="Auto" DataContext="{Binding ActiveTemplate.EclipseStructureSelectionVM}" Width="600"/>
+                                    </Popup>
+                                    <Button Grid.Column="2" Name="ImportTemplateStructureButton" Style="{StaticResource ButtonStyle_Small}" Command="{Binding ActiveTemplate.ImportTemplateStructuresFromEclipseCommand}" Background="PapayaWhip" ToolTip="Add new structure" VerticalAlignment="Center" Margin="5,0,5,0">
+                                        <Image Source="Resources/import.png" Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality"/>
                                     </Button>
                                 </Grid>
                             </Border>
                             <Border Grid.Column="1" CornerRadius="5" Background="CornflowerBlue" Margin="5,0,5,0">
-                                <TextBlock  Text="Mapped Eclipse Structure" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock  Text="Mapped Eclipse Structure" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="13" VerticalAlignment="Center"/>
                             </Border>
                         </Grid>
                         <Grid Grid.Row="1" Margin="0,5,0,0" Height="25" Grid.ColumnSpan="2">
@@ -247,13 +254,13 @@
                         </Grid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Generated Structures" Height="34" VerticalAlignment="Top" HorizontalAlignment="Center" Width="151">
+                <TabItem Header="Generated Structures" FontSize="13" Height="34" VerticalAlignment="Top" HorizontalAlignment="Center" Width="151">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <Grid Grid.Row="0" Margin="0,5,0,0" Height="25" >
+                        <Grid Grid.Row="0" Margin="0,5,0,0" Height="30" >
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="250"/>
                                 <ColumnDefinition Width="220"/>
@@ -266,24 +273,31 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Generated Structures" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="0" Text="Generated Structures" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="13" VerticalAlignment="Center"/>
                                     <Button Grid.Column="2" Style="{StaticResource ButtonStyle_Small}" Command="{Binding ActiveTemplate.AddGeneratedStructureCommand}" Background="PapayaWhip" ToolTip="Add new structure" VerticalAlignment="Center" Margin="0,0,5,0">
                                         <Image Source="Resources/plus_black.png" Stretch="Fill" />
                                     </Button>
                                     <Button Grid.Column="1" Style="{StaticResource ButtonStyle_Small}" Command="{Binding ActiveTemplate.ToggleEditAllGeneratedStructuresCommand}" Background="PapayaWhip" ToolTip="Toggle editing for all structures" VerticalAlignment="Center" Margin="0,0,5,0">
                                         <Image Source="Resources/edit.png" Stretch="Fill" />
                                     </Button>
+                                    <Popup Visibility="Visible" PlacementTarget="{Binding ElementName=ImportGeneratedStructureButton}" Width="600" StaysOpen="False" Placement="Right" HorizontalOffset="5" AllowsTransparency="True" IsOpen="{Binding ActiveTemplate.ImportGeneratedStructureVisibility, UpdateSourceTrigger=PropertyChanged}">
+                                        <controls:StructureSelectionControl MinHeight="35" Height="Auto" DataContext="{Binding ActiveTemplate.EclipseStructureSelectionVM}" Width="600"/>
+                                    </Popup>
+                                    <Button Grid.Column="3" Name="ImportGeneratedStructureButton" Style="{StaticResource ButtonStyle_Small}" Command="{Binding ActiveTemplate.ImportGeneratedStructuresFromEclipseCommand}" Background="PapayaWhip" ToolTip="Add new structure" VerticalAlignment="Center" Margin="0,0,5,0">
+                                        <Image Source="Resources/import.png" Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    </Button>
                                 </Grid>
                             </Border>
                             <Border Grid.Column="1" CornerRadius="5" Background="CornflowerBlue" Margin="5,0,5,0">
-                                <TextBlock Text="Operator" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="Operator" FontSize="13" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <Border Grid.Column="2" CornerRadius="5" Background="CornflowerBlue" Margin="5,0,5,0">
-                                <TextBlock Text="Template Structure" Foreground="White"  FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="Template Structure" FontSize="13" Foreground="White"  FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <Border Grid.Column="3" CornerRadius="5" Background="CornflowerBlue" Margin="5,0,5,0">
-                                <TextBlock Text="Operator Options" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="Operator Options" FontSize="13" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </Grid>
                         <Border Grid.Row="1" HorizontalAlignment="Stretch" Background="Gainsboro"
@@ -588,12 +602,27 @@
                                                                             </Border>
                                                                         </Grid>
                                                                         <Grid Visibility="{Binding SelectedOperator, Converter={StaticResource ConvertDoseVisibilityConverter}}">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                            </Grid.ColumnDefinitions>
                                                                             <Border Width="100" Grid.Column="0" Margin="5,1,5,1" Background="{Binding DoseLevelBackgroundColor, UpdateSourceTrigger=PropertyChanged}" BorderThickness="1" HorizontalAlignment="Left" CornerRadius="5,5,5,5">
                                                                                 <StackPanel Orientation="Vertical">
-                                                                                    <Border Background="LightSteelBlue" HorizontalAlignment="Stretch" CornerRadius="5,5,0,0">
-                                                                                        <TextBlock Text="Isodose (cGy)" Margin="0,2,0,2" HorizontalAlignment="Center" ToolTip="The isodose level to convert to structure."/>
+                                                                                    <Border Background="LightSteelBlue" HorizontalAlignment="Stretch" CornerRadius="5,5,0,0" Visibility="{Binding IsDoseLevelAbsolute, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
+                                                                                        <TextBlock Text="Isodose (cGy)" Margin="0,2,0,2" HorizontalAlignment="Center" ToolTip="The isodose level to convert to structure." />
+                                                                                    </Border>
+                                                                                    <Border Background="LightSteelBlue" HorizontalAlignment="Stretch" CornerRadius="5,5,0,0" Visibility="{Binding IsDoseLevelAbsolute, Converter={StaticResource VisibilityInverseConverter}, UpdateSourceTrigger=PropertyChanged}">
+                                                                                        <TextBlock Text="Isodose (%)" Margin="0,2,0,2" HorizontalAlignment="Center" ToolTip="The isodose level to convert to structure." />
                                                                                     </Border>
                                                                                     <TextBox Text="{Binding DoseLevel, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBoxStyle2}"  Width="50" Margin="0,3,0,2" HorizontalAlignment="Center" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                            <Border Width="90" Grid.Column="1" Margin="5,1,5,1" BorderBrush="LightSteelBlue" Background="LightGoldenrodYellow" BorderThickness="1" HorizontalAlignment="Center" CornerRadius="5,5,5,5">
+                                                                                <StackPanel Orientation="Vertical">
+                                                                                    <Border Background="LightSteelBlue" HorizontalAlignment="Stretch" CornerRadius="5,5,0,0">
+                                                                                        <TextBlock Text="Absolute" Margin="0,2,0,2" HorizontalAlignment="Center" ToolTip="This is used as the default for all directions which are not explicitly defined by the user. &#x0a;If this is negative, an internal margin is applied. Internal margins must be uniform."/>
+                                                                                    </Border>
+                                                                                    <CheckBox IsChecked="{Binding IsDoseLevelAbsolute, Mode=TwoWay}" Style="{StaticResource CheckBoxStyle1}" HorizontalAlignment="Center" Margin="5,5,0,0" Width="25" VerticalAlignment="Center" HorizontalContentAlignment="Center" />
                                                                                 </StackPanel>
                                                                             </Border>
                                                                         </Grid>

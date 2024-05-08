@@ -826,8 +826,8 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Padding" Value="0,0,0,0"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Height" Value="20"/>
-        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="23"/>
+        <Setter Property="Width" Value="23"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="VerticalContentAlignment" Value="Stretch"/>
         <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality"/>

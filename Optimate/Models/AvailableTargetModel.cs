@@ -67,7 +67,7 @@ namespace OptiMate.Models
             var targets = new List<InstructionTargetModel>();
             targets.AddRange(_templateStructureTargets);
             targets.AddRange(_genStructureTargets.Take(_genStructureTargets.Select(x => x.TargetStructureId).ToList().IndexOf(structureId)));
-            return targets;
+            return targets.OrderBy(x=>x.TargetStructureId).ToList();
         }
     }
 }

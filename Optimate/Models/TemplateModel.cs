@@ -1,4 +1,5 @@
 ﻿using OptiMate.Logging;
+using OptiMate.ViewModels;
 using Prism.Events;
 using System;
 using System.Collections.Generic;
@@ -6,9 +7,16 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace OptiMate.Models
 {
+    
+    public struct EclipseStructureProperties
+    {
+        public string StructureId;
+        public Color Color;
+    }
     public class TemplateModel
     {
         private EsapiWorker _ew;
@@ -114,6 +122,22 @@ namespace OptiMate.Models
             return newGeneratedStructureModel;
         }
 
+        internal GeneratedStructureModel AddGeneratedStructure(string genStructureId, Color genStructureColor)
+        {
+            var newGeneratedStructure = new GeneratedStructure()
+            {
+                StructureId = genStructureId,
+                Instructions = new GeneratedStructureInstructions() { Items = new Instruction[] { new Or() } }
+            };
+            var genStructures = _template.GeneratedStructures.ToList();
+            genStructures.Add(newGeneratedStructure);
+            _template.GeneratedStructures = genStructures.ToArray();
+            var newGeneratedStructureModel = new GeneratedStructureModel(_ew, _ea, newGeneratedStructure, this);
+            newGeneratedStructureModel.StructureColor = genStructureColor;
+            _ea.GetEvent<NewGeneratedStructureEvent>().Publish(new NewGeneratedStructureEventInfo { NewGeneratedStructure = newGeneratedStructureModel });
+            return newGeneratedStructureModel;
+        }
+
         internal void RemoveGeneratedStructure(string structureId)
         {
             var genStructures = _template.GeneratedStructures.ToList();
@@ -141,6 +165,21 @@ namespace OptiMate.Models
             {
                 TemplateStructureId = getNewTemplateStructureId(),
                 Alias = new string[] { }
+            };
+            var templateList = _template.TemplateStructures.ToList();
+            templateList.Add(newTemplateStructure);
+            _template.TemplateStructures = templateList.ToArray();
+            var newTemplateStructureModel = new TemplateStructureModel(newTemplateStructure, this, _eclipseIds, _ew, _ea);
+            _ea.GetEvent<NewTemplateStructureEvent>().Publish(new NewTemplateStructureEventInfo { NewTemplateStructure = newTemplateStructureModel });
+            return newTemplateStructureModel;
+        }
+
+        internal TemplateStructureModel AddTemplateStructure(string templateStructureId)
+        {
+            var newTemplateStructure = new TemplateStructure()
+            {
+                TemplateStructureId = templateStructureId,
+                Alias = new string[] { templateStructureId }
             };
             var templateList = _template.TemplateStructures.ToList();
             templateList.Add(newTemplateStructure);
@@ -242,7 +281,18 @@ namespace OptiMate.Models
         }
 
 
-
+        public async Task<List<EclipseStructureProperties>> GetEclipseStructureProperties()
+        {
+            var structures = new List<EclipseStructureProperties>();
+            await _ew.AsyncRunStructureContext((P, ss, ui) =>
+            {
+                foreach (var s in ss.Structures)
+                {
+                    structures.Add(new EclipseStructureProperties() { StructureId = s.Id, Color = s.Color });
+                }
+            });
+            return structures;
+        }
 
 
 

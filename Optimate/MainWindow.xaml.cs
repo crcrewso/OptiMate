@@ -41,14 +41,6 @@ namespace OptiMate
             e.Handled = true;
         }
 
-        private void KeyDown(object sender, KeyEventArgs e)
-        {
-            var VM = (ViewModel)DataContext;
-            if (e.Key == Key.Enter)
-                VM.IsErrorAcknowledged = true;
-        }
-
-
 
         private void TemplateStructures_MouseDown(object sender, MouseButtonEventArgs e)
         {

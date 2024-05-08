@@ -9,7 +9,7 @@
              xmlns:local="clr-namespace:OptiMate.Controls"
              mc:Ignorable="d" 
              MaxHeight="500"
-             d:DesignHeight="250" d:DesignWidth="400"
+             d:DesignHeight="320" d:DesignWidth="400"
              d:DataContext="{d:DesignInstance Type=ViewModels:EditControlViewModel, IsDesignTimeCreatable=True}">
     <UserControl.Resources>
         <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -40,7 +40,7 @@
                         <Image Grid.Column="0" Source="../Resources/edit.png" Height="12" Width="12" VerticalAlignment="Center" Margin="10,0,5,0" />
                         <TextBlock Grid.Column="1" Text="Edit Template Structure:" Foreground="Black" FontSize="13" FontWeight="Bold" Margin="0,0,0,0" VerticalAlignment="Center"/>
                         <TextBox Grid.Column="2" Text="{Binding TemplateStructureId, UpdateSourceTrigger=PropertyChanged}" behaviours:TextBoxExtensions.UpdateSourceOnKey="Return" Background="{Binding TemplateStructureIdBackgroundColor, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource TextBoxStyle1}" FontSize="13" FontWeight="Bold"  Margin="10,0,5,0" Width="Auto" HorizontalAlignment="Left" MaxWidth="200" Padding="10,0,10,0"/>
+                                 Style="{StaticResource TextBoxStyle1}" FontSize="13" FontWeight="Bold"  Margin="10,0,5,0" Width="180" HorizontalAlignment="Left" Padding="10,0,10,0"/>
                     </Grid>
                     <Border Grid.Row="1" Height="1" HorizontalAlignment="Stretch" Margin="10,5,10,0" Background="CornflowerBlue"/>
                 </Grid>
@@ -52,13 +52,28 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Aliases:" FontWeight="DemiBold" FontSize="13" VerticalAlignment="Center" Margin="10,0,5,0" Style="{x:Null}"/>
-                    <ListBox Grid.Column="1" x:Name="structure_aliaslist" ItemsSource="{Binding Aliases, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,10,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="White" Style="{DynamicResource ListBoxStyle1}" 
+                <Grid Grid.Row="0" Margin="5,5,0,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Background="CornflowerBlue" CornerRadius="5,5,5,5" Height="20">
+                        <TextBlock Grid.Row="0" Foreground="White" Text="Options" FontWeight="DemiBold" FontSize="13" VerticalAlignment="Center" Margin="10,0,5,0" Style="{x:Null}"/>
+                    </Border>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5,5,0,0">
+                        <TextBlock Text="Perform small volume checks on mapped structure:" VerticalAlignment="Center" FontWeight="DemiBold"/>
+                        <CheckBox Style="{StaticResource CheckBoxStyle1}" VerticalAlignment="Center" Margin="5,0,0,0" IsChecked="{Binding PerformSmallStructureChecks, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Row="1" >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Background="CornflowerBlue" CornerRadius="5,5,5,5" Margin="5,0,5,0" Height="20">
+                        <TextBlock Grid.Row="0" Foreground="White" Text="Aliases" FontWeight="DemiBold" FontSize="13" VerticalAlignment="Center" Margin="10,0,5,0" Style="{x:Null}"/>
+                    </Border>
+                    <ListBox Grid.Row="1" x:Name="structure_aliaslist" ItemsSource="{Binding Aliases, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,10,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="White" Style="{DynamicResource ListBoxStyle1}" 
                          ItemContainerStyle="{DynamicResource DraggableListBoxItemStyle}"
                          BorderThickness="0"  
                          dd:DragDrop.IsDragSource="True"
@@ -74,7 +89,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <Image Name ="DragImage"  Grid.Column="0" Height="20" Width="18" Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality" Source="..\Resources\align.png" ToolTip="Drag to reorder aliases" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5,2,5,2" 
-                                    MouseDown="AliasList_MouseDown" />   
+                                    MouseDown="AliasList_MouseDown" />
                                     <TextBlock Grid.Column="1" Text="{Binding}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="Transparent"/>
                                     <Button Grid.Column="2" Style="{StaticResource ButtonStyle_Small}" VerticalAlignment="Center" Height="20" Width="20" Background="Transparent" 
                                         Command="{Binding DataContext.RemoveAliasCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}">
@@ -85,13 +100,7 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </Grid>
-                <TextBlock Grid.Row="1" Text="Eclipse structures are mapped in order of the aliases above" FontSize="11" FontStyle="Italic" HorizontalAlignment="Center" Foreground="SteelBlue" FontWeight="DemiBold" Margin="10,0,10,0"/>
-                <Grid Grid.Row="2" Margin="5,5,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Perform small volume checks on mapped structure:" VerticalAlignment="Center" FontWeight="DemiBold"/>
-                        <CheckBox Style="{StaticResource CheckBoxStyle1}" VerticalAlignment="Center" Margin="5,0,0,0" IsChecked="{Binding PerformSmallStructureChecks, UpdateSourceTrigger=PropertyChanged}"/>
-                    </StackPanel>
-                </Grid>
+                <TextBlock Grid.Row="2" Text="Eclipse structures are mapped in order of the aliases above" FontSize="11" FontStyle="Italic" HorizontalAlignment="Center" Foreground="SteelBlue" FontWeight="DemiBold" Margin="10,0,10,0"/>
                 <Grid Grid.Row="3" Height="25" HorizontalAlignment="Left" Margin="5,10,0,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>

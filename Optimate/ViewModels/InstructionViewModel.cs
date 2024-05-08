@@ -14,6 +14,8 @@ using System.Windows;
 using System.Windows.Media;
 using static OptiMate.ViewModels.TemplateStructureViewModel;
 using System.Windows.Input;
+using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
+using PropertyChanged;
 
 namespace OptiMate.ViewModels
 {
@@ -41,7 +43,7 @@ namespace OptiMate.ViewModels
         private IEventAggregator _ea;
         private IInstructionModel _instructionModel;
         private IGeneratedStructureModel _parentGeneratedStructure;
-        public SometimesObservableCollection<OperatorTypes> Operators { get; set; } = new SometimesObservableCollection<OperatorTypes>()
+        public ObservableCollection<OperatorTypes> Operators { get; set; } = new ObservableCollection<OperatorTypes>()
         {
               OperatorTypes.convertResolution,
               OperatorTypes.margin,
@@ -56,7 +58,7 @@ namespace OptiMate.ViewModels
               OperatorTypes.partition,
               OperatorTypes.setHU
         };
-        public SometimesObservableCollection<MarginTypes> MarginTypeOptions { get; set; } = new SometimesObservableCollection<MarginTypes>()
+        public ObservableCollection<MarginTypes> MarginTypeOptions { get; set; } = new ObservableCollection<MarginTypes>()
         {
             MarginTypes.Outer,
             MarginTypes.Inner
@@ -153,6 +155,23 @@ namespace OptiMate.ViewModels
                     AddError(nameof(DoseLevel), $"Invalid dose level value for generated structure {_parentGeneratedStructure.StructureId}");
                 }
                 RaisePropertyChangedEvent(nameof(DoseLevelBackgroundColor));
+            }
+        }
+
+        
+        public bool? IsDoseLevelAbsolute
+        {
+            get
+            {
+                return _instructionModel.IsDoseLevelAbsolute;
+            }
+            set
+            {
+                if (value != _instructionModel.IsDoseLevelAbsolute)
+                {
+                    _instructionModel.IsDoseLevelAbsolute = value;
+                    isModified = true;
+                }
             }
         }
 
@@ -1138,6 +1157,7 @@ namespace OptiMate.ViewModels
                 case OperatorTypes.convertDose:
                     _selectedOperator = OperatorTypes.convertDose;
                     DoseLevel = _instructionModel.DoseLevel.ToString();
+                    IsDoseLevelAbsolute = _instructionModel.IsDoseLevelAbsolute;
                     break;
                 case OperatorTypes.convertResolution:
                     _selectedOperator = OperatorTypes.convertResolution;
@@ -1197,7 +1217,7 @@ namespace OptiMate.ViewModels
         {
             RaisePropertyChangedEvent(nameof(InstructionTargets));
         }
-
+        [SuppressPropertyChangedWarnings]
         private void OnInstructionTargetChanged(InstructionModel model)
         {
             if (_instructionModel == model)
