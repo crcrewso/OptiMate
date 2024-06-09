@@ -101,10 +101,10 @@ namespace OptiMate.Models
                 p.BeginModifications();
                 StructureSetId = ss.Id;
                 // one time initialization
-                isStructureEmpty = new Dictionary<string, bool>();
-                foreach (var s in ss.Structures)
+                _EclipseStructureDict = new Dictionary<string, bool>();
+                foreach (var s in ss.Structures.OrderBy(x=>x.Id))
                 {
-                    isStructureEmpty.Add(s.Id, s.IsEmpty);
+                    _EclipseStructureDict.Add(s.Id, s.IsEmpty);
                 }
             }));
         }
@@ -133,7 +133,7 @@ namespace OptiMate.Models
                     if (ValidateTemplate())
                     {
                         SeriLogModel.AddLog($"Template [{value.TemplateDisplayName}] validated");
-                        return new TemplateModel(_template, _ew, _ea, isStructureEmpty);
+                        return new TemplateModel(_template, _ew, _ea, _EclipseStructureDict);
                     }
                     else
                     {
@@ -241,7 +241,7 @@ namespace OptiMate.Models
         //    }
         //}
 
-        private Dictionary<string, bool> isStructureEmpty = null;
+        private Dictionary<string, bool> _EclipseStructureDict = null;
 
 
 
@@ -394,15 +394,7 @@ namespace OptiMate.Models
             }
         }
 
-
-
-
-
-
-
-
-
-
+      
     }
 }
 

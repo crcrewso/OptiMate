@@ -9,7 +9,7 @@ using VMS.TPS.Common.Model.API;
 
 namespace OptiMate.Models
 {
-    public class AvailableTargetModel
+    public class AvailableTargetModel : IDisposable
     {
         private OptiMateTemplate _template;
         private IEventAggregator _ea;
@@ -21,11 +21,11 @@ namespace OptiMate.Models
             _ea = ea;
             foreach (var templateStructure in _template.TemplateStructures)
             {
-                _templateStructureTargets.Add(new InstructionTargetModel(templateStructure.TemplateStructureId, templateStructure.EclipseStructureId, true,_ea));
+                _templateStructureTargets.Add(new InstructionTargetModel(templateStructure.TemplateStructureId, templateStructure.EclipseStructureId, true, _ea));
             }
             foreach (var genStructure in _template.GeneratedStructures)
             {
-                _genStructureTargets.Add(new InstructionTargetModel(genStructure.StructureId, genStructure.StructureId, false,_ea));
+                _genStructureTargets.Add(new InstructionTargetModel(genStructure.StructureId, genStructure.StructureId, false, _ea));
             }
             RegisterEvents();
         }
@@ -37,6 +37,16 @@ namespace OptiMate.Models
             _ea.GetEvent<NewGeneratedStructureEvent>().Subscribe(NewGeneratedStructure);
             _ea.GetEvent<NewTemplateStructureEvent>().Subscribe(NewTemplateStructure);
         }
+
+        public void Dispose()
+        {
+            // This shouldn't be necessary as the event aggregator should handle this with weak references, but for reasons I haven't figured out yet, this model isn't being garbage collected when then a new template is loaded
+            _ea.GetEvent<GeneratedStructureOrderChangedEvent>().Unsubscribe(GeneratedStructureOrderChanged);
+            _ea.GetEvent<TemplateStructureOrderChangedEvent>().Unsubscribe(TemplateStructureOrderChanged);
+            _ea.GetEvent<NewGeneratedStructureEvent>().Unsubscribe(NewGeneratedStructure);
+            _ea.GetEvent<NewTemplateStructureEvent>().Unsubscribe(NewTemplateStructure);
+        }
+       
 
         private void TemplateStructureOrderChanged((int, int) orderChange)
         {

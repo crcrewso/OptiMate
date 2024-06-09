@@ -16,7 +16,7 @@ using System.Windows;
 
 namespace OptiMate.ViewModels
 {
-    public class TemplateViewModel : ObservableObject
+    public class TemplateViewModel : ObservableObject, IDisposable
     {
 
         private TemplateModel _templateModel;
@@ -290,7 +290,9 @@ namespace OptiMate.ViewModels
             return await _templateModel.GenerateStructures();
         }
 
-
-
+        public void Dispose()
+        {
+            _templateModel.Dispose();
+        }
     }
 }

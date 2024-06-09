@@ -11,7 +11,7 @@ namespace OptiMate.Models
 
         public string DefaultInstructionTargetId => throw new NotImplementedException();
 
-        public ushort? DoseLevel { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public double? DoseLevel { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int Index { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public ushort? InfMargin { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public string InstructionTargetId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }

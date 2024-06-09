@@ -14,7 +14,7 @@ namespace OptiMate.Models
     {
         ushort? AntMargin { get; set; }
         string DefaultInstructionTargetId { get; set; }
-        ushort? DoseLevel { get; set; }
+        double? DoseLevel { get; set; }
         bool? IsDoseLevelAbsolute { get; set; }
         bool IsDoseLevelValid { get; }
         int Index { get; set; }
@@ -118,7 +118,7 @@ namespace OptiMate.Models
 
         // Dose Level
 
-        public ushort? DoseLevel
+        public double? DoseLevel
         {
             get
             {
@@ -133,7 +133,7 @@ namespace OptiMate.Models
                 {
                     if (isDoseLevelValid(value))
                     {
-                        (_instruction as ConvertDose).DoseLevel = (ushort)value;
+                        (_instruction as ConvertDose).DoseLevel = (double)value;
                         IsDoseLevelValid = true;
                     }
                     else
@@ -144,9 +144,9 @@ namespace OptiMate.Models
             }
         }
         public bool IsDoseLevelValid { get; private set; }
-        private bool isDoseLevelValid(ushort? value)
+        private bool isDoseLevelValid(double? value)
         {
-            if (value == null || value < 0 || value > 50000)
+            if (value == null || value < 0 || value > 50000 || (Decimal.Round((decimal)value, 3) != (decimal)value))
                 return false;
             else
                 return true;
@@ -856,8 +856,10 @@ namespace OptiMate.Models
                 case Margin _:
                     Operator = OperatorTypes.margin;
                     break;
-                case ConvertDose _:
+                case ConvertDose inst:
                     Operator = OperatorTypes.convertDose;
+                    IsDoseLevelAbsolute = inst.isDoseLevelAbsolute;
+                    DoseLevel = inst.DoseLevel;
                     break;
                 case SubFrom inst:
                     Operator = OperatorTypes.subfrom;

@@ -65,7 +65,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CheckBoxStyle1}"  Width="18" ToolTip="Select to import" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5,2,5,2" />
-                                    <TextBlock Grid.Column="1" Text="{Binding EclipseId}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="Transparent"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding StructureId}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="Transparent"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

@@ -29,8 +29,19 @@ namespace OptiMate.Models
             {
                 _ea.GetEvent<TemplateStructureIdChangedEvent>().Subscribe(OnTemplateStructureIdChanged);
                 _ea.GetEvent<GeneratedStructureIdChangedEvent>().Subscribe(OnGeneratedStructureIdChanged);
+                _ea.GetEvent<TemplateStructureMappingChangedEvent>().Subscribe(TemplateStructureMappingChanged);
+               
             }
         }
+        [SuppressPropertyChangedWarnings]
+        private void TemplateStructureMappingChanged(TemplateStructureMappingChangedEventInfo info)
+        {
+            if (TargetStructureId == info.TemplateStructureId && _isTemplateStructure)
+            {
+                EclipseStructureId = info.NewEclipseStructureId;
+            }
+        }
+
 
         [SuppressPropertyChangedWarnings]
         private void OnGeneratedStructureIdChanged(GeneratedStructureIdChangedEventInfo info)
@@ -39,6 +50,7 @@ namespace OptiMate.Models
             {
                 TargetStructureId = info.NewId;
                 EclipseStructureId = info.NewId;
+                _ea.GetEvent<AvailableTargetModelUpdated>().Publish();
             }
         }
 
@@ -48,6 +60,7 @@ namespace OptiMate.Models
             if (TargetStructureId == info.OldId && _isTemplateStructure)
             {
                TargetStructureId = info.NewId;
+               _ea.GetEvent<AvailableTargetModelUpdated>().Publish();
             }
 
         }

@@ -55,6 +55,12 @@ namespace OptiMate.Models
         public string NewId;
     }
 
+    public struct TemplateStructureMappingChangedEventInfo
+    {
+        public string TemplateStructureId;
+        public string NewEclipseStructureId;
+    }
+
     public struct GeneratedStructureIdChangedEventInfo
     {
         public string OldId;
@@ -67,6 +73,7 @@ namespace OptiMate.Models
     public class ReadyForGenStructureCleanupEvent : PubSubEvent { }
     
     public class TemplateStructureIdChangedEvent : PubSubEvent<TemplateStructureIdChangedEventInfo> { }
+    public class TemplateStructureMappingChangedEvent : PubSubEvent<TemplateStructureMappingChangedEventInfo> { }
     public class GeneratedStructureIdChangedEvent : PubSubEvent<GeneratedStructureIdChangedEventInfo> { }
 
     public class GeneratedStructureCleaningUpEvent : PubSubEvent<string> { }

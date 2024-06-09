@@ -13,6 +13,7 @@ namespace OptiMate.ViewModels
     public class EclipseStructureViewModel : ObservableObject
     {
         public string EclipseId { get; set; }
+        public string DicomType { get; set; }
         public SolidColorBrush EclipseIdColor { get; private set; }
         private bool isEmpty;
 

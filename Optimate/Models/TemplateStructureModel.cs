@@ -100,7 +100,14 @@ namespace OptiMate.Models
         public string EclipseStructureId
         {
             get { return _templateStructure.EclipseStructureId; }
-            set { _templateStructure.EclipseStructureId = value; }
+            set 
+            {
+                if (_templateStructure.EclipseStructureId != value)
+                {
+                    _templateStructure.EclipseStructureId = value;
+                    _ea.GetEvent<TemplateStructureMappingChangedEvent>().Publish(new TemplateStructureMappingChangedEventInfo() { TemplateStructureId = TemplateStructureId, NewEclipseStructureId = value });
+                }
+            }
         }
         public bool PerformSmallVolumeCheck
         {

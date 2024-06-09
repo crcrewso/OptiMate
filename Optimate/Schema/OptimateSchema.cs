@@ -566,13 +566,13 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
     public partial class ConvertDose : Instruction {
         
-        private ushort doseLevelField;
+        private double doseLevelField;
         
         private bool isDoseLevelAbsoluteField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public ushort DoseLevel {
+        public double DoseLevel {
             get {
                 return this.doseLevelField;
             }

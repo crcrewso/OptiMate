@@ -171,6 +171,23 @@ namespace OptiMate
             }
         }
 
+        public static class ValidateDicomType
+        {
+            private static List<string> _validTypes = new List<string> 
+            { "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", "ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", "DOSE_REGION"};
+            public static bool isValid(string dicomType)
+            {
+                if (_validTypes.Contains(dicomType))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         public static class MeshHelper
         {
             //the Boolean operation

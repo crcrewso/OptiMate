@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OptiMate.Models
 {
-
+    
     public enum SaveToPersonalResult
     {
         Success,

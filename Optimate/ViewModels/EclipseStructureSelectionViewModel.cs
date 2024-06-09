@@ -17,8 +17,13 @@ namespace OptiMate.ViewModels
     public class EclipseSelectedStructure
     {
         public bool IsSelected { get; set; }
-        public string EclipseId { get; set; }
-        public System.Windows.Media.Color StructureColor { get; set; }
+        public EclipseStructureProperties StructureProperties { get; set; }
+
+        public string StructureId
+        {
+            get { return StructureProperties.StructureId; }
+        }
+
     }
 
     public enum EclipseStructureImportMode
@@ -67,13 +72,9 @@ namespace OptiMate.ViewModels
         private async void PopulateList()
         {
             List<EclipseStructureProperties> structures = await _templateModel.GetEclipseStructureProperties();
-            foreach (var structure in structures)
+            foreach (var structure in structures.OrderBy(x=>x.StructureId))
             {
-                EclipseStructures.Add(new EclipseSelectedStructure
-                {
-                    EclipseId = structure.StructureId,
-                    StructureColor = structure.Color
-                });
+                EclipseStructures.Add(new EclipseSelectedStructure() { StructureProperties = structure });
             }
         }
 
@@ -94,12 +95,12 @@ namespace OptiMate.ViewModels
                     switch (ImportMode)
                     {
                         case EclipseStructureImportMode.Template:
-                            var tsm = _templateModel.AddTemplateStructure(structure.EclipseId);
+                            var tsm = _templateModel.AddTemplateStructure(structure.StructureProperties.StructureId);
                             var tsvm = new TemplateStructureViewModel(tsm, _templateModel, _ea);
                             _viewModel.TemplateStructuresVM.Add(tsvm);
                             break;
                         case EclipseStructureImportMode.Generated:
-                            var gsm = _templateModel.AddGeneratedStructure(structure.EclipseId, structure.StructureColor);
+                            var gsm = _templateModel.AddGeneratedStructure(structure.StructureProperties);
                             var gsvm = new GeneratedStructureViewModel(gsm, _ea);
                             _viewModel.GeneratedStructuresVM.Add(gsvm);
                             break;

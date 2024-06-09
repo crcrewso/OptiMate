@@ -93,6 +93,8 @@ namespace OptiMate.ViewModels
                     {
                         _selectedTemplate = value;
                         InitializeProtocol(value);
+                        GC.Collect();  // this seems to solve the problem of InstructionModel objects getting stuck in memory when the template is changed
+                        GC.WaitForFullGCComplete();
                     }
                     else
                         StatusMessage = "Please select template...";
@@ -111,8 +113,6 @@ namespace OptiMate.ViewModels
             set
             {
                 _activeTemplate = value;
-                GC.Collect();  // this seems to solve the problem of InstructionModel objects getting stuck in memory when the template is changed
-                GC.WaitForFullGCComplete();
             }
         }
 
@@ -350,6 +350,11 @@ namespace OptiMate.ViewModels
         private void InitializeProtocol(TemplatePointer value)
         {
             warnings.Clear();
+            // Cleanup
+            if (ActiveTemplate != null)
+            {
+                ActiveTemplate.Dispose();
+            }
             var templateModel = _model.LoadTemplate(value);
             if (templateModel != null)
             {

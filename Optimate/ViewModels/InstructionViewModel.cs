@@ -140,7 +140,7 @@ namespace OptiMate.ViewModels
             {
                 _doseLevel = value;
                 bool error = true;
-                if (ushort.TryParse(value, out ushort result))
+                if (double.TryParse(value, out double result))
                 {
                     _instructionModel.DoseLevel = result;
                     if (result == _instructionModel.DoseLevel && _instructionModel.IsDoseLevelValid)
@@ -1157,7 +1157,7 @@ namespace OptiMate.ViewModels
                 case OperatorTypes.convertDose:
                     _selectedOperator = OperatorTypes.convertDose;
                     DoseLevel = _instructionModel.DoseLevel.ToString();
-                    IsDoseLevelAbsolute = _instructionModel.IsDoseLevelAbsolute;
+                    RaisePropertyChangedEvent(nameof(IsDoseLevelAbsolute));
                     break;
                 case OperatorTypes.convertResolution:
                     _selectedOperator = OperatorTypes.convertResolution;

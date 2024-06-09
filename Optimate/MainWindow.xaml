@@ -223,13 +223,14 @@
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
                                                     <ComboBox Grid.Column="0" Margin="10,0,0,0" SelectedItem="{Binding SelectedEclipseStructure, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource OptiStructureComboBoxStyle}"
-                                                    Template="{DynamicResource OptiComboBoxControlTemplate}" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="150" DisplayMemberPath="EclipseId" Background="{Binding MappedStructureWarningColor, UpdateSourceTrigger=PropertyChanged}">
-                                                        <ComboBox.ItemsSource>
-                                                            <MultiBinding Converter="{StaticResource SortStructuresConverter}">
+                                                    Template="{DynamicResource OptiComboBoxControlTemplate}" ItemsSource="{Binding EclipseIds, UpdateSourceTrigger=PropertyChanged}"
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="150" DisplayMemberPath="EclipseId" Background="{Binding MappedStructureWarningColor, UpdateSourceTrigger=PropertyChanged}">
+                                                        <!--<ComboBox.ItemsSource>
+                                                            <MultiBinding> Converter="{StaticResource SortStructuresConverter}">
                                                                 <Binding Path="PrincipalAlias"  UpdateSourceTrigger="PropertyChanged" />
                                                                 <Binding Path="EclipseIds" UpdateSourceTrigger="PropertyChanged" />
                                                             </MultiBinding>
-                                                        </ComboBox.ItemsSource>
+                                                        </ComboBox.ItemsSource>-->
                                                         <ComboBox.ItemContainerStyle>
                                                             <Style TargetType="{x:Type ComboBoxItem}">
                                                                 <Setter Property="Foreground" Value="{Binding EclipseIdColor, UpdateSourceTrigger=PropertyChanged}"/>
@@ -622,7 +623,7 @@
                                                                                     <Border Background="LightSteelBlue" HorizontalAlignment="Stretch" CornerRadius="5,5,0,0">
                                                                                         <TextBlock Text="Absolute" Margin="0,2,0,2" HorizontalAlignment="Center" ToolTip="This is used as the default for all directions which are not explicitly defined by the user. &#x0a;If this is negative, an internal margin is applied. Internal margins must be uniform."/>
                                                                                     </Border>
-                                                                                    <CheckBox IsChecked="{Binding IsDoseLevelAbsolute, Mode=TwoWay}" Style="{StaticResource CheckBoxStyle1}" HorizontalAlignment="Center" Margin="5,5,0,0" Width="25" VerticalAlignment="Center" HorizontalContentAlignment="Center" />
+                                                                                    <CheckBox IsChecked="{Binding IsDoseLevelAbsolute, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CheckBoxStyle1}" HorizontalAlignment="Center" Margin="5,5,0,0" Width="25" VerticalAlignment="Center" HorizontalContentAlignment="Center" />
                                                                                 </StackPanel>
                                                                             </Border>
                                                                         </Grid>

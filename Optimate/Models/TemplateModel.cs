@@ -15,9 +15,10 @@ namespace OptiMate.Models
     public struct EclipseStructureProperties
     {
         public string StructureId;
+        public string DicomType;
         public Color Color;
     }
-    public class TemplateModel
+    public class TemplateModel : IDisposable
     {
         private EsapiWorker _ew;
         private OptiMateTemplate _template;
@@ -122,18 +123,19 @@ namespace OptiMate.Models
             return newGeneratedStructureModel;
         }
 
-        internal GeneratedStructureModel AddGeneratedStructure(string genStructureId, Color genStructureColor)
+        internal GeneratedStructureModel AddGeneratedStructure(EclipseStructureProperties structureProperties)
         {
             var newGeneratedStructure = new GeneratedStructure()
             {
-                StructureId = genStructureId,
+                StructureId = structureProperties.StructureId,
                 Instructions = new GeneratedStructureInstructions() { Items = new Instruction[] { new Or() } }
             };
             var genStructures = _template.GeneratedStructures.ToList();
             genStructures.Add(newGeneratedStructure);
             _template.GeneratedStructures = genStructures.ToArray();
             var newGeneratedStructureModel = new GeneratedStructureModel(_ew, _ea, newGeneratedStructure, this);
-            newGeneratedStructureModel.StructureColor = genStructureColor;
+            newGeneratedStructureModel.StructureColor = structureProperties.Color;
+            newGeneratedStructureModel.DicomType = structureProperties.DicomType;
             _ea.GetEvent<NewGeneratedStructureEvent>().Publish(new NewGeneratedStructureEventInfo { NewGeneratedStructure = newGeneratedStructureModel });
             return newGeneratedStructureModel;
         }
@@ -222,12 +224,7 @@ namespace OptiMate.Models
         }
 
 
-        public List<string> GetAvailableTemplateTargetIds(string thisGenStructureId = "")
-        {
-            var availableStructures = _template.TemplateStructures.Select(x => x.TemplateStructureId).ToList();
-            availableStructures.AddRange(_template.GeneratedStructures.Take(_template.GeneratedStructures.Select(x => x.StructureId).ToList().IndexOf(thisGenStructureId)).Select(x => x.StructureId));
-            return availableStructures;
-        }
+       
 
         internal async Task<List<string>> GenerateStructures()
         {
@@ -288,13 +285,15 @@ namespace OptiMate.Models
             {
                 foreach (var s in ss.Structures)
                 {
-                    structures.Add(new EclipseStructureProperties() { StructureId = s.Id, Color = s.Color });
+                    structures.Add(new EclipseStructureProperties() { StructureId = s.Id, Color = s.Color, DicomType=s.DicomType });
                 }
             });
             return structures;
         }
 
-
-
+        public void Dispose()
+        {
+            _availableTargets.Dispose();
+        }
     }
 }
