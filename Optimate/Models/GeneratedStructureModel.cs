@@ -725,13 +725,13 @@ namespace OptiMate.Models
             int endSlice;
             if (dir > 0)
             {
-                startSlice = (int)Math.Floor((zInf * 10 - epsilon - S.Image.Origin.z) / imageRes);
-                endSlice = (int)Math.Ceiling((zSup * 10 + epsilon - S.Image.Origin.z) / imageRes);
+                startSlice = (int)Math.Floor((zInf * 10 - epsilon - (S.Image.Origin.z - S.Image.UserOrigin.z) ) / imageRes);
+                endSlice = (int)Math.Ceiling((zSup * 10 + epsilon - (S.Image.Origin.z - S.Image.UserOrigin.z) ) / imageRes);
             }
             else
             {
-                startSlice = (int)Math.Floor((zInf * 10 - epsilon - S.Image.Origin.z) / imageRes);
-                endSlice = (int)Math.Ceiling((zSup * 10 + epsilon - S.Image.Origin.z) / imageRes);
+                startSlice = (int)Math.Floor((zInf * 10 - epsilon - (S.Image.Origin.z - S.Image.UserOrigin.z) ) / imageRes);
+                endSlice = (int)Math.Ceiling((zSup * 10 + epsilon - (S.Image.Origin.z - S.Image.UserOrigin.z) ) / imageRes);
             }
             startSlice = Math.Max(0, startSlice);
             endSlice = Math.Min(S.Image.ZSize - 1, endSlice);
