@@ -83,6 +83,7 @@
           </xs:element>
         </xs:sequence>
         <xs:attribute name="StructureId" type="xs:string" use="required"/>
+        <xs:attribute name="StructureCode" type="xs:string" use="optional"/>
         <xs:attribute name="Cleanup" type="OptiMate:CleanupOptions" use="optional" default="None"/>
         <xs:attribute name="ClearFirst" type="xs:boolean" use="optional" default="true"/>
         <xs:attribute name="DicomType" type="xs:string" default="CONTROL"/>

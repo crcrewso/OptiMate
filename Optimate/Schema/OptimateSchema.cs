@@ -737,6 +737,8 @@ namespace OptiMate {
         
         private string structureIdField;
         
+        private string structureCodeField;
+        
         private CleanupOptions cleanupField;
         
         private bool clearFirstField;
@@ -772,6 +774,17 @@ namespace OptiMate {
             }
             set {
                 this.structureIdField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string StructureCode {
+            get {
+                return this.structureCodeField;
+            }
+            set {
+                this.structureCodeField = value;
             }
         }
         

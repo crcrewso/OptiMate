@@ -37,6 +37,28 @@ namespace OptiMate
             }
             return pathSafeUser;
         }
+
+        public static bool ContainsCaseInsensitive(this string source, string toCheck)
+        {
+           return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        public static class StringHelper
+        {
+            public static string RemoveSpaces(string str)
+            {
+                return str.Replace(" ", "");
+            }
+            public static string RemoveUnderscores(string str)
+            {
+                return str.Replace("_", "");
+            }
+            public static string RemoveDashes(string str)
+            {
+                return str.Replace("-", "");
+            }
+        }
+
         public static class LevenshteinDistance
         {
             /// <summary>

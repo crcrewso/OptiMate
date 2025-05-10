@@ -956,6 +956,7 @@ namespace OptiMate.Models
                         }
                     }
                     SetEclipseStructureColor(isNewStructure);
+                    SetStructureCode();
 
                 }));
                 InstructionCompletionStatus status = InstructionCompletionStatus.Pending;
@@ -1034,6 +1035,42 @@ namespace OptiMate.Models
                 SeriLogModel.AddError($"Exce[topm reached generating structure {_genStructure.StructureId}", ex);
                 throw new Exception($"Exception reached in GenerateStructure, please contact your OptiMate admnistrator.");
             }
+        }
+
+        private async void SetStructureCode()
+        {
+            await Task.Run(() => _ew.AsyncRunStructureCodeContext((p, S, dict, ui) =>
+            {
+                if (_genStructure.StructureCode != null)
+                {
+                    // search all active dictionaries for the value by string
+                    bool codeSet = false;
+                    StructureCode structureCode = null;
+                    structureCode = dict.VmsStructCode.Values.FirstOrDefault(x => x.DisplayName.ContainsCaseInsensitive(_genStructure.StructureCode));
+                    if (structureCode != null)
+                    {
+                        generatedEclipseStructure.StructureCode = structureCode;
+                        codeSet = true;
+                        SeriLogModel.AddLog($"{_genStructure.StructureId} has been assigned the structure code {structureCode.DisplayName}");
+                    }
+                    else 
+                    {
+                        structureCode = dict.Fma.Values.FirstOrDefault(x => x.DisplayName.ContainsCaseInsensitive(_genStructure.StructureCode));
+                        if (structureCode != null)
+                        {
+                            generatedEclipseStructure.StructureCode = structureCode;
+                            codeSet = true;
+                            SeriLogModel.AddLog($"{_genStructure.StructureId} has been assigned the structure code {structureCode.DisplayName}");
+                        }
+                    }
+                    if (!codeSet)
+                    {
+                        var warning = $"Structure code {_genStructure.StructureCode} for {_genStructure.StructureId} was not found in the code dictionary";
+                        _warnings.Add(warning);
+                        SeriLogModel.AddWarning(warning);
+                    }
+                }
+            }));
         }
 
         public System.Windows.Media.Color GetStructureColor()

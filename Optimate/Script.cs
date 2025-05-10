@@ -42,10 +42,10 @@ namespace VMS.TPS
             EsapiWorker ew;
             if (context.PlanSetup == null)
             {
-                ew = new EsapiWorker(context.Patient, context.StructureSet, context.CurrentUser.Id);
+                ew = new EsapiWorker(context.Patient, context.StructureSet, context.CurrentUser.Id, context.StructureCodes);
             }
             else
-                ew = new EsapiWorker(context.Patient, context.PlanSetup, context.StructureSet, context.CurrentUser.Id);
+                ew = new EsapiWorker(context.Patient, context.PlanSetup, context.StructureSet, context.CurrentUser.Id, context.StructureCodes);
 
             // This new queue of tasks will prevent the script
             // for exiting until the new window is closed
