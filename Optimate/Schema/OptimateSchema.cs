@@ -155,6 +155,7 @@ namespace OptiMate {
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(And))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Or))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(ConvertResolution))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(ConvertLowResolution))]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
@@ -691,6 +692,15 @@ namespace OptiMate {
     }
     
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="OptiMate")]
+    public partial class ConvertLowResolution : Instruction {
+    }
+    
+    /// <remarks/>
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(GeneratedStructure))]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
@@ -863,6 +873,7 @@ namespace OptiMate {
         [System.Xml.Serialization.XmlElementAttribute("AsymmetricCrop", typeof(AsymmetricCrop))]
         [System.Xml.Serialization.XmlElementAttribute("AsymmetricMargin", typeof(AsymmetricMargin))]
         [System.Xml.Serialization.XmlElementAttribute("ConvertDose", typeof(ConvertDose))]
+        [System.Xml.Serialization.XmlElementAttribute("ConvertLowResolution", typeof(ConvertLowResolution))]
         [System.Xml.Serialization.XmlElementAttribute("ConvertResolution", typeof(ConvertResolution))]
         [System.Xml.Serialization.XmlElementAttribute("Crop", typeof(Crop))]
         [System.Xml.Serialization.XmlElementAttribute("Margin", typeof(Margin))]

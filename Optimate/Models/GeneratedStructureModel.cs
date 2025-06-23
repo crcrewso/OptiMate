@@ -36,6 +36,7 @@ namespace OptiMate.Models
         int GetInstructionNumber(IInstructionModel instruction);
         InstructionModel ReplaceInstruction(IInstructionModel instruction, OperatorTypes selectedOperator);
 
+        string StructureCodeDisplayName { get; set; }
         bool GenStructureWillBeEmpty();
 
     }
@@ -118,6 +119,15 @@ namespace OptiMate.Models
             }
         }
 
+        public string StructureCodeDisplayName
+        {
+            get { return _genStructure.StructureCode; }
+            set
+            {
+                _genStructure.StructureCode = value;
+            }
+        }
+
         public string DicomType
         {
             get
@@ -193,6 +203,8 @@ namespace OptiMate.Models
                     return new SubFrom();
                 case OperatorTypes.convertResolution:
                     return new ConvertResolution();
+                case OperatorTypes.convertLowResolution:
+                    return new ConvertLowResolution();
                 case OperatorTypes.asymmetricCrop:
                     return new AsymmetricCrop();
                 case OperatorTypes.partition:
@@ -917,6 +929,34 @@ namespace OptiMate.Models
             }));
             return completionStatus;
         }
+
+        private async Task<InstructionCompletionStatus> ApplyInstruction(ConvertLowResolution resolutionInstruction)
+        {
+            InstructionCompletionStatus completionStatus = InstructionCompletionStatus.Completed;
+            string tempStructureId = "NoPAUSE_LoRes_TEMP";
+            bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
+            {
+                if (generatedEclipseStructure != null && generatedEclipseStructure.IsHighResolution)
+                {
+                    SeriLogModel.AddWarning($"Converting {_genStructure.StructureId} to low resolution...");
+                    var tempStructure = S.AddStructure(_genStructure.DicomType, tempStructureId);
+                    int zMax = S.Image.ZSize;
+                    for (int z = 0; z < zMax; z++)
+                    {
+                        var Cs = generatedEclipseStructure.GetContoursOnImagePlane(z);
+                        foreach (var contour in Cs)
+                            tempStructure.AddContourOnImagePlane(contour, z);
+                    }
+                    var color = generatedEclipseStructure.Color;
+                    S.RemoveStructure(generatedEclipseStructure);
+                    generatedEclipseStructure = S.AddStructure(_genStructure.DicomType, _genStructure.StructureId);
+                    generatedEclipseStructure.Color = color;
+                    generatedEclipseStructure.SegmentVolume = tempStructure.SegmentVolume;
+                    S.RemoveStructure(tempStructure);
+                }
+            }));
+            return completionStatus;
+        }
         internal async Task GenerateStructure()
         {
             try
@@ -965,6 +1005,10 @@ namespace OptiMate.Models
                     switch (inst)
                     {
                         case ConvertResolution resolutionInstruction:
+                            if (resolutionInstruction != null)
+                                status = await ApplyInstruction(resolutionInstruction);
+                            break;
+                        case ConvertLowResolution resolutionInstruction:
                             if (resolutionInstruction != null)
                                 status = await ApplyInstruction(resolutionInstruction);
                             break;
@@ -1045,23 +1089,18 @@ namespace OptiMate.Models
                 {
                     // search all active dictionaries for the value by string
                     bool codeSet = false;
+                    bool foundCode = false;
                     StructureCode structureCode = null;
-                    structureCode = dict.VmsStructCode.Values.FirstOrDefault(x => x.DisplayName.ContainsCaseInsensitive(_genStructure.StructureCode));
-                    if (structureCode != null)
+                    (foundCode, structureCode) = getBestMatchingCode(_genStructure.StructureCode, dict.VmsStructCode);
+                    if (!foundCode)
+                    {
+                        (foundCode, structureCode) = getBestMatchingCode(_genStructure.StructureCode, dict.Fma);
+                    }
+                    if (foundCode)
                     {
                         generatedEclipseStructure.StructureCode = structureCode;
                         codeSet = true;
                         SeriLogModel.AddLog($"{_genStructure.StructureId} has been assigned the structure code {structureCode.DisplayName}");
-                    }
-                    else 
-                    {
-                        structureCode = dict.Fma.Values.FirstOrDefault(x => x.DisplayName.ContainsCaseInsensitive(_genStructure.StructureCode));
-                        if (structureCode != null)
-                        {
-                            generatedEclipseStructure.StructureCode = structureCode;
-                            codeSet = true;
-                            SeriLogModel.AddLog($"{_genStructure.StructureId} has been assigned the structure code {structureCode.DisplayName}");
-                        }
                     }
                     if (!codeSet)
                     {
@@ -1071,6 +1110,14 @@ namespace OptiMate.Models
                     }
                 }
             }));
+        }
+
+        private (bool, StructureCode) getBestMatchingCode(string inputCode, StructureCodeDictionary dict)
+        {
+            var structureCode = dict.Values.FirstOrDefault(x => string.Equals(x.DisplayName, inputCode, StringComparison.OrdinalIgnoreCase));
+            if (structureCode == null)
+                structureCode = dict.Values.FirstOrDefault(x => x.DisplayName.ContainsCaseInsensitive(inputCode));
+            return (structureCode != null, structureCode);
         }
 
         public System.Windows.Media.Color GetStructureColor()
@@ -1125,17 +1172,7 @@ namespace OptiMate.Models
                 return _defaultColor;
             }
         }
-        private async Task ConvertToHighResolution()
-        {
-            bool Done = await Task.Run(() => _ew.AsyncRunStructureContext((p, S, ui) =>
-            {
-                if (!generatedEclipseStructure.IsHighResolution)
-                {
-                    generatedEclipseStructure.ConvertToHighResolution();
-                }
-            }));
-        }
-
+        
         internal IEnumerable<string> GetCompletionWarnings()
         {
             return _warnings;

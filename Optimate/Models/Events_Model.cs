@@ -61,6 +61,12 @@ namespace OptiMate.Models
         public string NewEclipseStructureId;
     }
 
+    public struct GeneratedStructureEditEventInfo
+    {
+        public IGeneratedStructureModel model;
+        public bool EditModeActive;
+    }
+
     public struct GeneratedStructureIdChangedEventInfo
     {
         public string OldId;
@@ -68,9 +74,13 @@ namespace OptiMate.Models
     }
 
     public class TemplateSavedEvent : PubSubEvent { }
+    public class StructureEditEvent : PubSubEvent<GeneratedStructureEditEventInfo> { }
+
+
     public class AvailableTargetModelUpdated : PubSubEvent { }
 
     public class ReadyForGenStructureCleanupEvent : PubSubEvent { }
+    public class StructureOptionsClosing : PubSubEvent { }
     
     public class TemplateStructureIdChangedEvent : PubSubEvent<TemplateStructureIdChangedEventInfo> { }
     public class TemplateStructureMappingChangedEvent : PubSubEvent<TemplateStructureMappingChangedEventInfo> { }

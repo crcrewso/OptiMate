@@ -23,6 +23,7 @@ namespace OptiMate.ViewModels
     {
         undefined,
         convertResolution,
+        convertLowResolution,
         margin,
         asymmetricMargin,
         or,
@@ -46,6 +47,7 @@ namespace OptiMate.ViewModels
         public ObservableCollection<OperatorTypes> Operators { get; set; } = new ObservableCollection<OperatorTypes>()
         {
               OperatorTypes.convertResolution,
+              OperatorTypes.convertLowResolution,
               OperatorTypes.margin,
               OperatorTypes.asymmetricMargin,
               OperatorTypes.or,
@@ -781,6 +783,8 @@ namespace OptiMate.ViewModels
                         return Visibility.Hidden;
                     case OperatorTypes.convertResolution:
                         return Visibility.Hidden;
+                    case OperatorTypes.convertLowResolution:
+                        return Visibility.Hidden;
                     case OperatorTypes.convertDose:
                         return Visibility.Hidden;
                     case OperatorTypes.partition:
@@ -1161,7 +1165,11 @@ namespace OptiMate.ViewModels
                     break;
                 case OperatorTypes.convertResolution:
                     _selectedOperator = OperatorTypes.convertResolution;
-                    RaisePropertyChangedEvent(nameof(TargetStructure));
+                    //RaisePropertyChangedEvent(nameof(TargetStructure));
+                    break;
+                case OperatorTypes.convertLowResolution:
+                    _selectedOperator = OperatorTypes.convertLowResolution;
+                    //RaisePropertyChangedEvent(nameof(TargetStructure));
                     break;
                 case OperatorTypes.crop:
                     _selectedOperator = OperatorTypes.crop;

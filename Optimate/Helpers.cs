@@ -117,6 +117,8 @@ namespace OptiMate
             {
                 case OperatorTypes.convertResolution:
                     return "High Res.";
+                case OperatorTypes.convertLowResolution:
+                    return "Low Res.";
                 case OperatorTypes.margin:
                     return "Margin";
                 case OperatorTypes.asymmetricMargin:

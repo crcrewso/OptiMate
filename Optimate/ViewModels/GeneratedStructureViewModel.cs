@@ -41,6 +41,8 @@ namespace OptiMate.ViewModels
             return new List<IInstructionModel>();
         }
 
+        public string StructureCodeDisplayName { get; set; }
+
         public Color GetStructureColor()
         {
             throw new NotImplementedException();
@@ -60,6 +62,13 @@ namespace OptiMate.ViewModels
         {
             throw new NotImplementedException();
         }
+
+        public Task<List<string>> GetStructureCodeDisplayNames()
+        {
+            throw new NotImplementedException();
+        }
+
+        
     }
 
     public class GeneratedStructureViewModel : ObservableObject
@@ -79,6 +88,7 @@ namespace OptiMate.ViewModels
             RegisterEvents();
         }
 
+       
         public GeneratedStructureViewModel()
         {
             _generatedStructureModel = new GeneratedStructureModelTest()
@@ -132,9 +142,13 @@ namespace OptiMate.ViewModels
             }
         }
 
-
+        public List<string> StructureCodeDisplayNames { get; set; } = new List<string>();
+        public bool StructureCodeDisplayNameVisibility { get; set; } = false;
+      
         public bool EditMode { get; set; } = false;
         public bool isModified { get; private set; } = false;
+
+       
 
         public string StructureId
         {
@@ -164,7 +178,7 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public bool clearFirst
+        public bool ClearFirst
         {
             get
             {
@@ -182,7 +196,7 @@ namespace OptiMate.ViewModels
             }
         }
 
-        public ObservableCollection<CleanupOptions> CleanupOptions { get; set; } = new ObservableCollection<CleanupOptions> { OptiMate.CleanupOptions.None, OptiMate.CleanupOptions.WhenEmpty, OptiMate.CleanupOptions.Always };
+        
 
         public CleanupOptions CleanupOption
         {
@@ -201,23 +215,7 @@ namespace OptiMate.ViewModels
             }
         }
 
-        //public bool isTemporary
-        //{
-        //    get
-        //    {
-        //        return _generatedStructureModel.IsTemporary;
-        //    }
-        //    set
-        //    {
-        //        if (value != _generatedStructureModel.IsTemporary)
-        //        {
-        //            _generatedStructureModel.IsTemporary = value;
-        //            isModified = true;
-        //            RaisePropertyChangedEvent(nameof(WarningVisibility_GenStructureChanged));
-        //        }
-        //    }
-        //}
-
+        
         public ObservableCollection<InstructionViewModel> InstructionViewModels { get; set; } = new ObservableCollection<InstructionViewModel>();
 
         public bool isStructureIdValid
@@ -321,10 +319,33 @@ namespace OptiMate.ViewModels
             }
         }
 
+       
+
         private void ToggleEditMode(object obj = null)
         {
             if (!HasErrors)
+            {
                 EditMode ^= true;
+                if (!EditMode)
+                    _ea.GetEvent<StructureOptionsClosing>().Publish();
+            }
+        }
+
+
+        public ICommand OpenOptionsCommand
+        {
+            get
+            {
+                return new DelegateCommand(OpenOptions);
+            }
+        }
+
+        private void OpenOptions(object obj = null)
+        {
+            if (!HasErrors)
+            {
+                _ea.GetEvent<StructureEditEvent>().Publish(new GeneratedStructureEditEventInfo() { model = _generatedStructureModel, EditModeActive = EditMode });
+            }
         }
 
         public Visibility WarningVisibility_GenStructureChanged

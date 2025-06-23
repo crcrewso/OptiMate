@@ -75,6 +75,8 @@ namespace OptiMate.ViewModels
         public bool CanSaveTemplates { get; private set; } = true;
         public bool PopupLock { get; private set; } = true;
 
+        public bool StructureEditMode { get; private set; }
+
         private List<string> _warnings = new List<string>();
 
         private SolidColorBrush WarningColour = new SolidColorBrush(Colors.DarkOrange);
@@ -117,6 +119,9 @@ namespace OptiMate.ViewModels
         }
 
         public SaveNewTemplateViewModel SaveTemplateVM { get; set; }
+
+        public GeneratedStructureOptionsViewModel GeneratedStructureOptionsVM { get; set; }// generate it here due to length of the structure code list
+
 
         private void ValidateControls(object sender, DataErrorsChangedEventArgs e)
         {
@@ -281,6 +286,12 @@ namespace OptiMate.ViewModels
             _model.SetEventAggregator(_ea);
             RegisterEvents();
             _model.Initialize();
+            LoadStructureCodeNames();
+        }
+
+        private async void LoadStructureCodeNames()
+        {
+            GeneratedStructureOptionsVM = new GeneratedStructureOptionsViewModel(await _model.GetStructureCodeDisplayNames(), _ea);
         }
 
         private void RegisterEvents()
@@ -294,7 +305,20 @@ namespace OptiMate.ViewModels
             _ea.GetEvent<DataValidationRequiredEvent>().Subscribe(CheckAllInputsValid);
             _ea.GetEvent<ModelInitializedEvent>().Subscribe(Initialize);
             _ea.GetEvent<TemplateSavedEvent>().Subscribe(OnTemplateSaved);
+            _ea.GetEvent<StructureEditEvent>().Subscribe(OpenStructureEditWindow);
             _ea.GetEvent<LockingPopupEvent>().Subscribe(LockForPopup);
+            _ea.GetEvent<StructureOptionsClosing>().Subscribe(CloseStructureEditWindow);
+        }
+
+        private void CloseStructureEditWindow()
+        {
+            StructureEditMode = false;
+        }
+
+        private void OpenStructureEditWindow(GeneratedStructureEditEventInfo info)
+        {
+            StructureEditMode = true;
+            GeneratedStructureOptionsVM.SetGeneratedStructure(info.model);
         }
 
         private void RemovedGeneratedStructure(RemovedGeneratedStructureEventInfo info)
@@ -339,6 +363,7 @@ namespace OptiMate.ViewModels
         private void OnTemplateSaved()
         {
             ReloadTemplates();
+            _ea.GetEvent<StructureOptionsClosing>().Publish();
         }
 
         private void UpdateStatus_GeneratingStructure(StructureGeneratingEventInfo info)
@@ -350,6 +375,7 @@ namespace OptiMate.ViewModels
         private void InitializeProtocol(TemplatePointer value)
         {
             warnings.Clear();
+            _ea.GetEvent<StructureOptionsClosing>().Publish();
             // Cleanup
             if (ActiveTemplate != null)
             {
@@ -533,6 +559,7 @@ namespace OptiMate.ViewModels
 
         public void ReloadTemplates(object param = null)
         {
+            _ea.GetEvent<StructureOptionsClosing>().Publish();
             ActiveTemplate = null;
             warnings.Clear();
             RaisePropertyChangedEvent(nameof(HasWarnings));

@@ -61,6 +61,7 @@ namespace OptiMate.Models
             SeriLogModel.Initialize(LogPath, _ew.UserId);
             await InitializeEclipseObjects();
             InitializeEvents();
+            
         }
 
         private void InitializeEvents()
@@ -228,21 +229,18 @@ namespace OptiMate.Models
             return (eclipseStructureId.Count() > 0 && eclipseStructureId.Count() <= 16);
         }
 
-        //private bool IsValidReferenceStructure(string genStructureId, string templateStructureId)
-        //{
-        //    var augmentedList = GetAugmentedTemplateStructures(genStructureId);
-        //    if (augmentedList.Any(x => string.Equals(x.TemplateStructureId, templateStructureId, StringComparison.OrdinalIgnoreCase)))
-        //    {
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        return false;
-        //    }
-        //}
-
         private Dictionary<string, bool> _EclipseStructureDict = null;
 
+        public async Task<List<string>> GetStructureCodeDisplayNames()
+        {
+            var codes = new List<string>();
+            await _ew.AsyncRunStructureCodeContext((p, S, dict, _ui) =>
+            {
+                codes.AddRange(dict.VmsStructCode.Values.Select(x => x.DisplayName).ToList());
+                codes.AddRange(dict.Fma.Values.Select(x => x.DisplayName).ToList());
+            });
+            return codes;
+        }
 
 
         internal IEnumerable<TemplatePointer> GetTemplates()

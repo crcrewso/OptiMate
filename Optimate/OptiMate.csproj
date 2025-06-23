@@ -183,6 +183,7 @@
     <Compile Include="ViewModels\DescriptionViewModel.cs" />
     <Compile Include="ViewModels\EclipseStructureViewModel.cs" />
     <Compile Include="ViewModels\Events_UI.cs" />
+    <Compile Include="ViewModels\GeneratedStructureOptionsViewModel.cs" />
     <Compile Include="ViewModels\GeneratedStructureViewModel.cs" />
     <Compile Include="ViewModels\InstructionViewModel.cs" />
     <Compile Include="ViewModels\SaveNewTemplateViewModel.cs" />
@@ -191,6 +192,9 @@
     <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="Views\Behaviours.cs" />
     <Compile Include="Views\DescriptionView.xaml.cs" />
+    <Compile Include="Views\GeneratedStructureOptionsView.xaml.cs">
+      <DependentUpon>GeneratedStructureOptionsView.xaml</DependentUpon>
+    </Compile>
     <Page Include="Controls\ConfirmationControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -229,6 +233,10 @@
     <Page Include="Views\DescriptionView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\GeneratedStructureOptionsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="XAMLDictionary.xaml">
       <SubType>Designer</SubType>
@@ -304,6 +312,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\import.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\settings.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\settings_trans.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -869,6 +869,9 @@ namespace OptiMate.Models
                 case ConvertResolution _:
                     Operator = OperatorTypes.convertResolution;
                     break;
+                case ConvertLowResolution _:
+                    Operator = OperatorTypes.convertLowResolution;
+                    break;
                 case AsymmetricCrop inst:
                     Operator = OperatorTypes.asymmetricCrop;
                     InstructionTarget = GetInstructionTarget(inst.TargetStructureId);
@@ -973,6 +976,8 @@ namespace OptiMate.Models
                 case OperatorTypes.margin:
                     return false;
                 case OperatorTypes.convertResolution:
+                    return false;
+                case OperatorTypes.convertLowResolution:
                     return false;
                 case OperatorTypes.asymmetricMargin:
                     return false;

@@ -23,7 +23,6 @@
             </ResourceDictionary.MergedDictionaries>
             <converters:isMarginInternal x:Key="isMarginInternal"/>
             <converters:ConvertToOperatorName x:Key="ConvertToOperatorName"/>
-            <converters:ConvertToCleanUpName x:Key="ConvertToCleanUpName"/>
             <converters:AvailableOperators x:Key="AvailableOperators"/>
             <converters:ShowRemoveInstructionButtonConverter x:Key="ShowRemoveInstructionButtonConverter"/>
             <converters:ValidNonEmptyParameterToColor x:Key="ValidNonEmptyParameterToColor"/>
@@ -59,6 +58,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
@@ -323,6 +323,10 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <Grid Grid.Column="0">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto"/>
                                                         <ColumnDefinition Width="Auto"/>
@@ -341,13 +345,18 @@
                                                         </Button>
                                                     </Grid>
                                                     <Image Grid.Column="1" Source="Resources/align.png" Height="20" Width="20" RenderOptions.BitmapScalingMode="HighQuality" MouseDown="GenStructures_MouseDown"/>
-                                                    <Button Grid.Column="2" Style="{StaticResource ButtonStyle_Small}" Command="{Binding EditGenStructureCommand}" ToolTip="Edit generated structure">
+                                                    <Button Grid.Column="2" Name="EditButton" Style="{StaticResource ButtonStyle_Small}" Command="{Binding EditGenStructureCommand}" ToolTip="Edit generated structure">
                                                         <Image  Source="Resources/edit.png" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Fill"/>
+                                                    </Button>
+                                                    <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ButtonStyle_Small}" Command="{Binding OpenOptionsCommand}" ToolTip="Additional Options"
+                                                            Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}}" VerticalAlignment="Center">
+                                                        <Image Source="Resources/settings_trans.png" Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality"/>
                                                     </Button>
                                                     <Grid Grid.Column="3">
                                                         <Grid>
                                                             <Grid.RowDefinitions>
                                                                 <RowDefinition Height="*"/>
+                                                                <RowDefinition Height="Auto"/>
                                                                 <RowDefinition Height="Auto"/>
                                                                 <RowDefinition Height="Auto"/>
                                                                 <RowDefinition Height="Auto"/>
@@ -368,29 +377,6 @@
                                                                         </Style>
                                                                     </TextBox.Style>
                                                                 </TextBox>
-                                                            </StackPanel>
-                                                            <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,5,0,0" Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}, FallbackValue=Visible}">
-                                                                <TextBlock Text="Clear first: " FontSize="12" VerticalAlignment="Center" ToolTip="If checked, any existing contours for this structure will be cleared before generation."/>
-                                                                <CheckBox Style="{StaticResource CheckBoxStyle1}" IsChecked="{Binding clearFirst, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                                                            </StackPanel>
-                                                            <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,5,0,0" Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}, FallbackValue=Visible}">
-                                                                <TextBlock Text="Cleanup: " FontSize="12" VerticalAlignment="Center" ToolTip="Temporary structures are removed after all structures have been generated."/>
-                                                                <ComboBox Style="{StaticResource OptiStructureComboBoxStyle}" Template="{StaticResource OptiComboBoxControlTemplate}" ItemsSource="{Binding CleanupOptions}" SelectedItem="{Binding CleanupOption}">
-                                                                    <ComboBox.ItemTemplate>
-                                                                        <DataTemplate>
-                                                                            <TextBlock Text="{Binding Converter={StaticResource ConvertToCleanUpName}}" />
-                                                                        </DataTemplate>
-                                                                    </ComboBox.ItemTemplate>
-                                                                </ComboBox>
-                                                            </StackPanel>
-                                                            <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,5,0,0" Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}, FallbackValue=Visible}">
-                                                                <TextBlock Text="Overwrite color: " FontSize="12" VerticalAlignment="Center" ToolTip="Temporary structures are removed after all structures have been generated."/>
-                                                                <CheckBox Style="{StaticResource CheckBoxStyle1}" IsChecked="{Binding OverwriteColor, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                                                            </StackPanel>
-                                                            <StackPanel Grid.Row="4" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,5,0,0" Visibility="{Binding EditMode, Converter={StaticResource VisibilityConverter}, FallbackValue=Visible}">
-                                                                <TextBlock Text="Set Color: " FontSize="12" VerticalAlignment="Center"/>
-                                                                <extended:ColorPicker Name="ColorPicker" DropDownBackground="White" HeaderBackground="White" Foreground="LightSteelBlue" TabBackground="CornflowerBlue" TabForeground="White" 
-                                                                                      SelectedColor="{Binding StructureColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Width="50" Height="25" Margin="5,0,0,0"/>
                                                             </StackPanel>
                                                         </Grid>
 
@@ -763,11 +749,15 @@
                                 </ListView>
                             </ScrollViewer>
                         </Grid>
+                      
                     </Grid>
                 </TabItem>
             </TabControl>
         </Grid>
-        <Grid Grid.Row="3" Margin="0,0,0,0"  VerticalAlignment="Center" Grid.ColumnSpan="2">
+        <Grid Grid.Row="3" Visibility="{Binding StructureEditMode, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}, FallbackValue=True}" Margin="0,0,0,10">
+            <views:GeneratedStructureOptionsView Grid.Row="3" MinHeight="35" DataContext="{Binding GeneratedStructureOptionsVM}"/>
+        </Grid>
+        <Grid Grid.Row="4" Margin="0,0,0,0"  VerticalAlignment="Center" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>

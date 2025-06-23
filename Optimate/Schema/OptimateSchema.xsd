@@ -66,6 +66,7 @@
               <xs:sequence>
                 <xs:choice minOccurs="1" maxOccurs="unbounded">
                   <xs:element name="ConvertResolution" type="OptiMate:ConvertResolution"/>
+                  <xs:element name="ConvertLowResolution" type="OptiMate:ConvertLowResolution"/>
                   <xs:element name="ConvertDose" type="OptiMate:ConvertDose"/>
                   <xs:element name="Margin" type="OptiMate:Margin"/>
                   <xs:element name="AsymmetricMargin" type="OptiMate:AsymmetricMargin"/>
@@ -93,6 +94,11 @@
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="Instruction">
+  </xs:complexType>
+  <xs:complexType name="ConvertLowResolution">
+    <xs:complexContent mixed="false">
+      <xs:extension base="OptiMate:Instruction"/>
+    </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="ConvertResolution">
     <xs:complexContent mixed="false">
