@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<OptiMateConfiguration xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="OptiMate file://spvaimapcn//data$//Apps//OptiMate//OptiMate//Schema//OptimateSchema.xsd" xmlns="OptiMate">
+  <Paths>
+    <PublicTemplatePath>\\spvaimapcn\data$\Apps\_AppData\OptiMate\Templates\Public</PublicTemplatePath>
+    <UsersTemplatePath>\\spvaimapcn\data$\Apps\_AppData\OptiMate\Templates\Users</UsersTemplatePath>
+    <LogPath>\\spvaimapcn\data$\Apps\_AppData\OptiMate\Logs</LogPath>
+  </Paths>
+</OptiMateConfiguration>

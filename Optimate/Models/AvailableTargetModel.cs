@@ -36,6 +36,22 @@ namespace OptiMate.Models
             _ea.GetEvent<TemplateStructureOrderChangedEvent>().Subscribe(TemplateStructureOrderChanged);
             _ea.GetEvent<NewGeneratedStructureEvent>().Subscribe(NewGeneratedStructure);
             _ea.GetEvent<NewTemplateStructureEvent>().Subscribe(NewTemplateStructure);
+            _ea.GetEvent<RemovedTemplateStructureEvent>().Subscribe(RemovedTemplateStructure);
+            _ea.GetEvent<RemovedGeneratedStructureEvent>().Subscribe(RemovedGeneratedStructure);
+        }
+
+        private void RemovedGeneratedStructure(RemovedGeneratedStructureEventInfo info)
+        {
+            // remove the generated structure
+            _genStructureTargets.Remove(_genStructureTargets.FirstOrDefault(x => x.TargetStructureId == info.RemovedStructureId));
+            _ea.GetEvent<AvailableTargetModelUpdated>().Publish();
+        }
+
+        private void RemovedTemplateStructure(RemovedTemplateStructureEventInfo info)
+        {
+            // remove the generated structure
+            _templateStructureTargets.Remove(_templateStructureTargets.FirstOrDefault(x => x.TargetStructureId == info.RemovedTemplateStructureId));
+            _ea.GetEvent<AvailableTargetModelUpdated>().Publish();
         }
 
         public void Dispose()
@@ -45,6 +61,8 @@ namespace OptiMate.Models
             _ea.GetEvent<TemplateStructureOrderChangedEvent>().Unsubscribe(TemplateStructureOrderChanged);
             _ea.GetEvent<NewGeneratedStructureEvent>().Unsubscribe(NewGeneratedStructure);
             _ea.GetEvent<NewTemplateStructureEvent>().Unsubscribe(NewTemplateStructure);
+            _ea.GetEvent<RemovedTemplateStructureEvent>().Unsubscribe(RemovedTemplateStructure);
+            _ea.GetEvent<RemovedGeneratedStructureEvent>().Unsubscribe(RemovedGeneratedStructure);
         }
        
 
