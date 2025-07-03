@@ -1,65 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<OptiMateProtocol ProtocolDisplayName="CN_HN_70in35" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="\\spvaimapcn\data$\Apps\OptiMate\Schema\OptimateSchema.xsd">
-  <version>0</version>
-  <OptiStructures>
-    <OptiStructure StructureId="Brainstem_PRV" isHighResolution="false" Type="Control" BaseStructure="Brainstem">
-      <Instruction Operator="margin"  OperatorParameter="5" OperatorParameter2="5" OperatorParameter3="0" OperatorParameter4="5" OperatorParameter5="5" OperatorParameter6="5"/>
-    </OptiStructure>
-    <OptiStructure StructureId="SpinalCord_PRV" isHighResolution="false" Type="Control" BaseStructure="SpinalCord">
-      <Instruction Operator="margin"  OperatorParameter="5" OperatorParameter2="5" OperatorParameter3="0" OperatorParameter4="5" OperatorParameter5="5" OperatorParameter6="0"/>
-    </OptiStructure>
-    <OptiStructure StructureId="Optics_PRV" isHighResolution="false" Type="Control" BaseStructure="Optics">
-      <Instruction Operator="margin"  OperatorParameter="3"/>
-    </OptiStructure>
-    <OptiStructure StructureId="PTV_70_eval" isHighResolution="false" Type="Control" BaseStructure="PTV_70">
-      <Instruction Operator="crop" DefaultTarget="skin" OperatorParameter2="true"/>
-    </OptiStructure>
-    <OptiStructure StructureId="PTV_70_opti" isHighResolution="false" Type="Control" BaseStructure="PTV_70">
-      <Instruction Operator="crop" DefaultTarget="Mandible"/>
-    </OptiStructure>
-    <OptiStructure StructureId="PTV_56_eval" isHighResolution="false" Type="Control" BaseStructure="PTV_56" >
-      <Instruction Operator="crop" DefaultTarget="PTV_70"/>
-      <Instruction Operator="crop" DefaultTarget="skin" OperatorParameter="5" OperatorParameter2="true"/>
-    </OptiStructure>
-    <OptiStructure StructureId="PTV_56_opti" isHighResolution="true" Type="Control" BaseStructure="PTV_56_eval">
-      <Instruction Operator="crop" DefaultTarget="PTV_70" OperatorParameter="2" OperatorParameter2="false"/>
-    </OptiStructure>
-    <OptiStructure StructureId="Parotid_R_opti" isHighResolution="false" Type="Control" BaseStructure="Parotid_R" >
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-    <OptiStructure StructureId="Parotid_L_opti" isHighResolution="false" Type="Control" BaseStructure="Parotid_L" >
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-    <OptiStructure StructureId="Submand_R_opti" isHighResolution="false" Type="Control" BaseStructure="Submand_R">
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-    <OptiStructure StructureId="Submand_L_opti" isHighResolution="false" Type="Control" BaseStructure="Submand_L">
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-    <OptiStructure StructureId="OralCavity_opti" isHighResolution="false" Type="Control" BaseStructure="OralCavity">
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-    <OptiStructure StructureId="Mandible_opti" isHighResolution="false" Type="Control" BaseStructure="Mandible" >
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-    <OptiStructure StructureId="PTVandMandible" isHighResolution="false" Type="Control" BaseStructure="PTV_70">
-      <Instruction Operator="and" DefaultTarget="Mandible" /> 
-  </OptiStructure>
-
-    <OptiStructure StructureId="Musc_Cons_opti" isHighResolution="false" Type="Control" BaseStructure="Musc_Constrict">
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-    <OptiStructure StructureId="Larynx_opti" isHighResolution="false" Type="Control" BaseStructure="Larynx">
-      <Instruction Operator="crop" DefaultTarget="PTV_70" />
-      <Instruction Operator="crop" DefaultTarget="PTV_56"/>
-    </OptiStructure>
-   
-  </OptiStructures>
-</OptiMateProtocol>
+<OptiMateTemplate TemplateDisplayName="CN_HN_70in35" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="OptiMate file://spvaimapcn//data$//Apps//OptiMate//OptiMate//Schema//OptimateSchema.xsd" xmlns="OptiMate">
+  <version>0</version> 
+  <TemplateStructures>
+    <TemplateStructure TemplateStructureId="PTV_70">
+      <Alias>PTV_70</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="PTV_56">
+      <Alias>PTV_56</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Brainstem">
+      <Alias>Brainstem</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="SpinalCord">
+      <Alias>SpinalCord</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Optics">
+      <Alias>Optics</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Skin">
+      <Alias>skin</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Mandible">
+      <Alias>Mandible</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Parotid_R">
+      <Alias>Parotid_R</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Parotid_L">
+      <Alias>Parotid_L</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Submand_R">
+      <Alias>Submand_R</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Submand_L">
+      <Alias>Submand_L</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="OralCavity">
+      <Alias>OralCavity</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Musc_Constrict">
+      <Alias>Musc_Constrict</Alias>
+    </TemplateStructure>
+    <TemplateStructure TemplateStructureId="Larynx">
+      <Alias>Larynx</Alias>
+    </TemplateStructure>
+  </TemplateStructures>
+  <GeneratedStructures>
+    <GeneratedStructure StructureId="Brainstem_PRV" DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="Brainstem"/>
+        <AsymmetricMargin AntMargin="5" PostMargin="5" SupMargin="5" InfMargin="0" LeftMargin="5" RightMargin="5"/>
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="SpinalCord_PRV" DicomType="Control" >
+      <Instructions>
+        <Or TargetStructureId="SpinalCord"/>
+        <AsymmetricMargin  AntMargin="5" PostMargin="5" SupMargin="0" InfMargin="5" LeftMargin="5" RightMargin="5"/>
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Optics_PRV" DicomType="Control" >
+      <Instructions>
+        <Or TargetStructureId="Optics"/>
+        <Margin IsotropicMargin="3"/>
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="PTV_70_eval" DicomType="Control" StructureColor="255,000,128">
+      <Instructions>
+        <Or TargetStructureId="PTV_70"/>
+        <Crop TargetStructureId="Skin" InternalCrop="true"/>
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="PTV_70_opti" DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="PTV_70"/>
+        <Sub TargetStructureId="Mandible"/>
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="PTV_56_eval" DicomType="Control" StructureColor="190,000,095">
+      <Instructions>
+        <Or TargetStructureId="PTV_56"/>
+        <Crop TargetStructureId="PTV_70"/>
+        <Crop TargetStructureId="Skin" IsotropicOffset="5" InternalCrop="true"/>
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="PTV_56_opti" DicomType="Control" >
+      <Instructions>
+        <Or TargetStructureId="PTV_56_eval"/>
+        <Crop TargetStructureId="PTV_70" IsotropicOffset="2"/>
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Parotid_R_opti" DicomType="Control" >
+      <Instructions>
+        <Or TargetStructureId="Parotid_R"/>
+        <Crop TargetStructureId="PTV_70" />
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Parotid_L_opti" DicomType="Control"  >
+      <Instructions>
+        <Or TargetStructureId="Parotid_L"/>
+        <Crop TargetStructureId="PTV_70" />
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Submand_R_opti" DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="Submand_R"/>
+        <AsymmetricCrop TargetStructureId="PTV_70" AntOffset="0" InfOffset="0" LeftOffset="0" PostOffset="0" RightOffset="0" SupOffset="0"/>
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Submand_L_opti" DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="Submand_L"/>
+        <Crop TargetStructureId="PTV_70" />
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="OralCavity_opti" DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="OralCavity"/>
+        <Crop TargetStructureId="PTV_70" />
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Mandible_opti"  DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="Mandible"/>
+        <Crop TargetStructureId="PTV_70" />
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="PTVandMandible"  DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="PTV_70"/>
+        <And TargetStructureId="Mandible" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Musc_Cons_opti" DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="Musc_Constrict"/>
+        <Crop TargetStructureId="PTV_70" />
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+    <GeneratedStructure StructureId="Larynx_opti" DicomType="Control">
+      <Instructions>
+        <Or TargetStructureId="Larynx"/>
+        <Crop TargetStructureId="PTV_70" />
+        <Crop TargetStructureId="PTV_56" />
+      </Instructions>
+    </GeneratedStructure>
+  </GeneratedStructures>
+</OptiMateTemplate>
